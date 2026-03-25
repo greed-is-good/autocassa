@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --autocassa-bg: #f5f8fc;
+  --autocassa-surface: rgba(255, 255, 255, 0.88);
+  --autocassa-surface-strong: rgba(255, 255, 255, 0.96);
+  --autocassa-border: rgba(15, 23, 42, 0.08);
+  --autocassa-text: #0f172a;
+  --autocassa-muted: #60708a;
+  --autocassa-brand: #1f73f2;
+  --autocassa-brand-deep: #123b84;
+  --autocassa-accent: #ff7a1a;
+  --autocassa-success: #1f8f66;
+  --autocassa-warning: #d97706;
+  --autocassa-danger: #c2410c;
+  --autocassa-radius: 24px;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--autocassa-text);
+  font-family: 'Manrope', system-ui, sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(31, 115, 242, 0.18), transparent 34%),
+    radial-gradient(circle at top right, rgba(255, 122, 26, 0.14), transparent 28%),
+    linear-gradient(180deg, #f8fbff 0%, #f3f7fb 55%, #eef3f8 100%);
+}
+
+body::before {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  content: '';
+  background-image:
+    linear-gradient(rgba(15, 23, 42, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 23, 42, 0.03) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(circle at top, black 38%, transparent 86%);
+  pointer-events: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  color: white;
+  background: rgba(31, 115, 242, 0.78);
+}
+
+.autocassa-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(31, 115, 242, 0.32) transparent;
+}
+
+.autocassa-scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.autocassa-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(31, 115, 242, 0.24);
+  border-radius: 999px;
+}
+
+.autocassa-panel {
+  border: 1px solid var(--autocassa-border);
+  border-radius: var(--autocassa-radius);
+  background: var(--autocassa-surface);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(20px);
+}
+
+.autocassa-fade-up {
+  animation: autocassa-fade-up 420ms ease-out both;
+}
+
+@keyframes autocassa-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
