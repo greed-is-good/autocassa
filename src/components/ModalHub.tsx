@@ -55,7 +55,7 @@ export const ModalHub = () => {
               <TextField defaultValue="@nova_aff" fullWidth label="Telegram" />
               <TextField defaultValue="До 600 операций / месяц" fullWidth label="План объёма" />
               <TextField
-                defaultValue="Royal Arcade, Volna Casino"
+                defaultValue="PP Poker, X-poker"
                 fullWidth
                 label="Доступные клубы"
               />

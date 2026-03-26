@@ -28,14 +28,13 @@ const partnerRates = tariffRates.filter((rate) => rate.partnerId === partner.id)
 export const PartnerTariffsPage = () => (
   <Stack className="autocassa-fade-up" spacing={3}>
     <Alert icon={<LockRounded />} severity="warning" sx={{ borderRadius: '20px' }}>
-      Тарифы доступны партнёру только для просмотра. Управление курсами и процессингами
-      находится в контуре владельца.
+      Тарифы доступны только для просмотра
     </Alert>
 
     <Grid container spacing={2.2}>
       <Grid size={{ xs: 12, md: 4 }}>
         <MetricCard
-          hint="Активные связки по Orbit Traffic"
+          hint="Активные ставки"
           icon={<PaymentsRounded />}
           label="Тарифных связок"
           value={partnerRates.length.toString()}
@@ -43,7 +42,7 @@ export const PartnerTariffsPage = () => (
       </Grid>
       <Grid size={{ xs: 12, md: 4 }}>
         <MetricCard
-          hint="Основная ставка по RUB и KZT"
+          hint="Среднее значение"
           icon={<PaymentsRounded />}
           label="Средний фиксированный курс"
           tone="success"
@@ -52,7 +51,7 @@ export const PartnerTariffsPage = () => (
       </Grid>
       <Grid size={{ xs: 12, md: 4 }}>
         <MetricCard
-          hint="Период между оплатой и расчётом с партнёром"
+          hint="Расчётный срок"
           icon={<PaymentsRounded />}
           label="Расчётное окно"
           tone="warning"
@@ -64,7 +63,7 @@ export const PartnerTariffsPage = () => (
     <SectionCard
       eyebrow="Партнёр"
       title="Тарифы по связке валюта + процессинг"
-      subtitle="В демонстрации показаны согласованные фиксированные курсы для доступа партнёра."
+      subtitle="Фиксированные ставки партнёра"
       action={<Chip label={partner.commissionNote} />}
     >
       <TableContainer>

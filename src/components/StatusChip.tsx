@@ -59,14 +59,22 @@ const chipMap: Record<
 interface StatusChipProps {
   status: SupportedStatus
   size?: 'small' | 'medium'
+  label?: string
+  sx?: ChipProps['sx']
 }
 
-export const StatusChip = ({ status, size = 'small' }: StatusChipProps) => (
+export const StatusChip = ({
+  status,
+  size = 'small',
+  label,
+  sx,
+}: StatusChipProps) => (
   <Chip
     color={chipMap[status].color}
     icon={chipMap[status].icon}
-    label={status}
+    label={label ?? status}
     size={size}
+    sx={sx}
     variant={chipMap[status].color === 'default' ? 'outlined' : 'filled'}
   />
 )

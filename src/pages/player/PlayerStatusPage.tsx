@@ -59,207 +59,244 @@ export const PlayerStatusPage = () => {
       <SectionCard
         eyebrow="Игрок"
         title="Ожидание оплаты / Статус платежа"
-        subtitle="Главный рабочий экран после создания операции: отслеживание оплаты, статуса зачисления и связи с администратором."
+        subtitle="Статус оплаты и зачисления"
       >
-        <Grid container spacing={3}>
-          <Grid size={{ xs: 12, lg: 8 }}>
-            <Stack spacing={2.5}>
-              <Box
-                sx={{
-                  alignItems: 'center',
-                  background:
-                    'linear-gradient(135deg, rgba(31,115,242,0.12), rgba(255,255,255,0.8))',
-                  border: '1px solid rgba(31,115,242,0.12)',
-                  borderRadius: '24px',
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: 2,
-                  justifyContent: 'space-between',
-                  p: 2.5,
-                }}
-              >
-                <Stack spacing={1}>
-                  <Typography variant="h3">{currentPlayerOperation.id}</Typography>
-                  <Stack direction="row" flexWrap="wrap" gap={1}>
-                    <StatusChip status={currentPlayerOperation.paymentStatus} />
-                    <StatusChip status={currentPlayerOperation.creditStatus} />
-                  </Stack>
-                </Stack>
-                <Stack alignItems={{ xs: 'flex-start', md: 'flex-end' }} spacing={1}>
-                  <Chip
-                    icon={<AccessTimeRounded />}
-                    label={`Ссылка активна: ${currentPlayerOperation.linkExpiresIn}`}
-                    variant="outlined"
-                  />
-                  <Typography color="text.secondary" variant="body2">
-                    {scenarioMeta.description}
-                  </Typography>
-                </Stack>
-              </Box>
+        <Stack spacing={2.5}>
+          <Box
+            sx={{
+              backgroundColor: 'rgba(15,23,42,0.03)',
+              border: '1px dashed rgba(15,23,42,0.10)',
+              borderRadius: '20px',
+              px: 2,
+              py: 1.6,
+            }}
+          >
+            <Stack
+              alignItems={{ xs: 'flex-start', xl: 'center' }}
+              direction={{ xs: 'column', xl: 'row' }}
+              justifyContent="space-between"
+              spacing={1.5}
+            >
+              <Stack spacing={0.35}>
+                <Typography
+                  color="text.secondary"
+                  fontSize={12}
+                  fontWeight={800}
+                  letterSpacing="0.12em"
+                  textTransform="uppercase"
+                >
+                  Служебный режим
+                </Typography>
+                <Typography color="text.secondary" variant="body2">
+                  Сценарии ниже только для демонстрации
+                </Typography>
+              </Stack>
 
-              <Alert
-                severity={scenarioMeta.highlight}
-                sx={{ borderRadius: '20px' }}
-                action={
-                  <Button
-                    color="inherit"
-                    onClick={() => {
-                      if (statusScenario === 'expired') {
-                        openModal({
-                          type: 'paymentExpired',
-                          operationId: currentPlayerOperation.id,
-                        })
-                        return
-                      }
+              <Stack direction="row" flexWrap="wrap" gap={1}>
+                {scenarios.map((scenario) => {
+                  const item = playerScenarioMeta[scenario]
+                  const isActive = scenario === statusScenario
 
-                      if (statusScenario === 'success') {
-                        openModal({
-                          type: 'paymentSuccess',
-                          operationId: currentPlayerOperation.id,
-                        })
-                        return
-                      }
-
-                      if (statusScenario === 'credit_error') {
-                        openModal({
-                          type: 'accrualError',
-                          operationId: currentPlayerOperation.id,
-                        })
-                        return
-                      }
-
-                      if (statusScenario === 'manual') {
-                        openModal({
-                          type: 'manualAdjustment',
-                          operationId: currentPlayerOperation.id,
-                        })
-                        return
-                      }
-
-                      setChatOpen(true)
-                    }}
-                  >
-                    Показать окно
-                  </Button>
-                }
-              >
-                <Typography fontWeight={800}>{scenarioMeta.title}</Typography>
-              </Alert>
-
-              <SectionCard
-                title="Карточка операции"
-                subtitle="Игрок видит только необходимые данные по конкретному пополнению."
-                action={
-                  <Stack direction="row" spacing={1}>
-                    <Tooltip title="Скопировать ссылку">
-                      <IconButton>
-                        <ContentCopyRounded />
-                      </IconButton>
-                    </Tooltip>
-                    <Button startIcon={<OpenInNewRounded />} variant="contained">
-                      {scenarioMeta.actionLabel}
+                  return (
+                    <Button
+                      color="inherit"
+                      key={scenario}
+                      onClick={() => setStatusScenario(scenario)}
+                      size="small"
+                      sx={{
+                        backgroundColor: isActive
+                          ? 'rgba(31,115,242,0.08)'
+                          : 'rgba(255,255,255,0.7)',
+                        borderColor: isActive
+                          ? 'rgba(31,115,242,0.22)'
+                          : 'rgba(15,23,42,0.10)',
+                        color: isActive ? 'primary.main' : 'text.secondary',
+                        fontWeight: 700,
+                      }}
+                      variant="outlined"
+                    >
+                      {item.title}
                     </Button>
-                  </Stack>
-                }
-              >
-                <Grid container spacing={2}>
-                  {[
-                    ['Клуб', `${club.title} • ${club.appName}`],
-                    ['Номер аккаунта', currentPlayerOperation.accountId],
-                    ['Сумма', `${formatAmount(currentPlayerOperation.amount, currentPlayerOperation.currency)} ${currentPlayerOperation.currency}`],
-                    ['Процессинг', processing.title],
-                    ['Ссылка на оплату', currentPlayerOperation.paymentLink],
-                    ['Таймер жизни ссылки', currentPlayerOperation.linkExpiresIn],
-                  ].map(([label, value]) => (
-                    <Grid key={label} size={{ xs: 12, md: 6 }}>
-                      <Stack
-                        spacing={0.4}
-                        sx={{
-                          backgroundColor: 'rgba(255,255,255,0.72)',
-                          border: '1px solid rgba(15,23,42,0.06)',
-                          borderRadius: '18px',
-                          p: 1.75,
-                        }}
-                      >
-                        <Typography color="text.secondary" variant="body2">
-                          {label}
-                        </Typography>
-                        <Typography fontWeight={800}>{value}</Typography>
-                      </Stack>
-                    </Grid>
-                  ))}
-                </Grid>
-              </SectionCard>
-
-              {currentPlayerOperation.issueNote ? (
-                <Alert severity="warning" sx={{ borderRadius: '18px' }}>
-                  {currentPlayerOperation.issueNote}
-                </Alert>
-              ) : null}
-
-              <SectionCard
-                title="Статус-линия операции"
-                subtitle="Одна и та же зона экрана подходит для демонстрации успешного сценария и исключений MVP."
-              >
-                <OperationTimeline items={currentPlayerOperation.timeline} />
-              </SectionCard>
+                  )
+                })}
+              </Stack>
             </Stack>
-          </Grid>
+          </Box>
 
-          <Grid size={{ xs: 12, lg: 4 }}>
-            <Stack spacing={2.5}>
-              <SectionCard
-                title="Демо-состояния"
-                subtitle="Можно быстро переключать альтернативные статусы без повторного создания операции."
-              >
-                <Stack spacing={1.2}>
-                  {scenarios.map((scenario) => {
-                    const item = playerScenarioMeta[scenario]
-                    const isActive = scenario === statusScenario
+          <Grid container spacing={3}>
+            <Grid size={{ xs: 12, lg: 7 }}>
+              <Stack spacing={2.5}>
+                <SectionCard
+                  title="Карточка операции"
+                  action={
+                    <Stack direction="row" spacing={1}>
+                      <Tooltip title="Скопировать ссылку">
+                        <IconButton>
+                          <ContentCopyRounded />
+                        </IconButton>
+                      </Tooltip>
+                      <Button startIcon={<OpenInNewRounded />} variant="contained">
+                        {scenarioMeta.actionLabel}
+                      </Button>
+                    </Stack>
+                  }
+                >
+                  <Grid container spacing={2}>
+                    {[
+                      ['Приложение', club.title],
+                      ['Номер аккаунта', currentPlayerOperation.accountId],
+                      ['Сумма', `${formatAmount(currentPlayerOperation.amount, currentPlayerOperation.currency)} ${currentPlayerOperation.currency}`],
+                      ['Процессинг', processing.title],
+                      ['Ссылка на оплату', currentPlayerOperation.paymentLink],
+                      ['Таймер жизни ссылки', currentPlayerOperation.linkExpiresIn],
+                    ].map(([label, value]) => (
+                      <Grid key={label} size={{ xs: 12, md: 6 }}>
+                        <Stack
+                          spacing={0.4}
+                          sx={{
+                            backgroundColor: 'rgba(255,255,255,0.72)',
+                            border: '1px solid rgba(15,23,42,0.06)',
+                            borderRadius: '18px',
+                            p: 1.75,
+                          }}
+                        >
+                          <Typography color="text.secondary" variant="body2">
+                            {label}
+                          </Typography>
+                          <Typography fontWeight={800}>{value}</Typography>
+                        </Stack>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </SectionCard>
 
-                    return (
-                      <Button
-                        color={isActive ? 'primary' : 'inherit'}
-                        key={scenario}
-                        onClick={() => setStatusScenario(scenario)}
-                        sx={{ justifyContent: 'space-between', py: 1.3 }}
-                        variant={isActive ? 'contained' : 'outlined'}
-                      >
-                        <Stack alignItems="flex-start" spacing={0.3}>
-                          <Typography fontWeight={800}>{item.title}</Typography>
-                          <Typography
-                            color={isActive ? 'rgba(255,255,255,0.84)' : 'text.secondary'}
-                            variant="body2"
-                          >
-                            {item.paymentStatus} / {item.creditStatus}
+                {currentPlayerOperation.issueNote ? (
+                  <Alert severity="warning" sx={{ borderRadius: '18px' }}>
+                    {currentPlayerOperation.issueNote}
+                  </Alert>
+                ) : null}
+
+                <SectionCard
+                  title="Статус-линия операции"
+                >
+                  <OperationTimeline items={currentPlayerOperation.timeline} />
+                </SectionCard>
+              </Stack>
+            </Grid>
+
+            <Grid size={{ xs: 12, lg: 5 }}>
+              <Stack spacing={2.5}>
+                <SectionCard
+                  title="Статус по операции"
+                  action={
+                    <Chip
+                      icon={<AccessTimeRounded />}
+                      label={`Ссылка: ${currentPlayerOperation.linkExpiresIn}`}
+                      variant="outlined"
+                    />
+                  }
+                >
+                  <Stack spacing={2}>
+                    <Stack spacing={1}>
+                      <Typography variant="h3">{currentPlayerOperation.id}</Typography>
+                      <Stack direction="row" flexWrap="wrap" gap={1}>
+                        <StatusChip status={currentPlayerOperation.paymentStatus} />
+                        <StatusChip status={currentPlayerOperation.creditStatus} />
+                      </Stack>
+                    </Stack>
+
+                    <Stack spacing={1.1}>
+                      {[
+                        ['Приложение', club.title],
+                        ['Процессинг', processing.code],
+                        ['Статус', `${scenarioMeta.paymentStatus} / ${scenarioMeta.creditStatus}`],
+                      ].map(([label, value]) => (
+                        <Stack
+                          direction="row"
+                          justifyContent="space-between"
+                          key={label}
+                          spacing={2}
+                        >
+                          <Typography color="text.secondary">{label}</Typography>
+                          <Typography fontWeight={800} textAlign="right">
+                            {value}
                           </Typography>
                         </Stack>
-                      </Button>
-                    )
-                  })}
-                </Stack>
-              </SectionCard>
+                      ))}
+                    </Stack>
 
-              <SectionCard title="Поддержка по операции" subtitle="Чат можно открыть даже если оплата ещё не завершена.">
-                <Stack spacing={1.5}>
-                  <Stack direction="row" flexWrap="wrap" gap={1}>
-                    <Chip icon={<LinkRounded />} label={processing.code} />
-                    <Chip icon={<CheckCircleRounded />} label={club.title} variant="outlined" />
+                    <Alert
+                      severity={scenarioMeta.highlight}
+                      sx={{ borderRadius: '18px' }}
+                      action={
+                        <Button
+                          color="inherit"
+                          onClick={() => {
+                            if (statusScenario === 'expired') {
+                              openModal({
+                                type: 'paymentExpired',
+                                operationId: currentPlayerOperation.id,
+                              })
+                              return
+                            }
+
+                            if (statusScenario === 'success') {
+                              openModal({
+                                type: 'paymentSuccess',
+                                operationId: currentPlayerOperation.id,
+                              })
+                              return
+                            }
+
+                            if (statusScenario === 'credit_error') {
+                              openModal({
+                                type: 'accrualError',
+                                operationId: currentPlayerOperation.id,
+                              })
+                              return
+                            }
+
+                            if (statusScenario === 'manual') {
+                              openModal({
+                                type: 'manualAdjustment',
+                                operationId: currentPlayerOperation.id,
+                              })
+                              return
+                            }
+
+                            setChatOpen(true)
+                          }}
+                        >
+                          Подробнее
+                        </Button>
+                      }
+                    >
+                      <Typography fontWeight={800}>{scenarioMeta.title}</Typography>
+                    </Alert>
                   </Stack>
-                  <Divider />
-                  <Button
-                    color="secondary"
-                    onClick={() => setChatOpen(true)}
-                    startIcon={<ChatRounded />}
-                    variant="contained"
-                  >
-                    Открыть чат с администратором
-                  </Button>
-                </Stack>
-              </SectionCard>
-            </Stack>
+                </SectionCard>
+
+                <SectionCard title="Поддержка">
+                  <Stack spacing={1.5}>
+                    <Stack direction="row" flexWrap="wrap" gap={1}>
+                      <Chip icon={<LinkRounded />} label={processing.code} />
+                      <Chip icon={<CheckCircleRounded />} label={club.title} variant="outlined" />
+                    </Stack>
+                    <Divider />
+                    <Button
+                      color="secondary"
+                      onClick={() => setChatOpen(true)}
+                      startIcon={<ChatRounded />}
+                      variant="contained"
+                    >
+                      Открыть чат с администратором
+                    </Button>
+                  </Stack>
+                </SectionCard>
+              </Stack>
+            </Grid>
           </Grid>
-        </Grid>
+        </Stack>
       </SectionCard>
     </Stack>
   )

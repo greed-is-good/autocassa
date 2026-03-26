@@ -79,7 +79,7 @@ export const ChatWidget = () => {
         {
           id: 'fallback-system',
           author: 'system' as const,
-          text: 'Чат привязан к текущей операции. Ответы администратора приходят через Telegram.',
+          text: 'Чат привязан к операции, ответы приходят через Telegram',
           time: 'сейчас',
         },
       ],
@@ -114,18 +114,17 @@ export const ChatWidget = () => {
             bottom: 98,
             display: 'flex',
             flexDirection: 'column',
-            height: 560,
+            height: { xs: 'calc(100vh - 132px)', sm: 620 },
+            maxHeight: 'calc(100vh - 132px)',
             overflow: 'hidden',
             position: 'fixed',
             right: 28,
-            width: { xs: 'calc(100vw - 32px)', sm: 380 },
+            width: { xs: 'calc(100vw - 24px)', sm: 440 },
             zIndex: 1300,
           }}
         >
           <Stack
-            direction="row"
-            justifyContent="space-between"
-            spacing={2}
+            spacing={1.4}
             sx={{
               background:
                 'linear-gradient(135deg, rgba(18,59,132,1), rgba(31,115,242,0.96))',
@@ -133,8 +132,19 @@ export const ChatWidget = () => {
               p: 2,
             }}
           >
-            <Stack spacing={0.6}>
+            <Stack alignItems="center" direction="row" justifyContent="space-between">
               <Typography fontWeight={800}>Чат с администратором</Typography>
+              <IconButton onClick={() => setChatOpen(false)} sx={{ color: 'white' }}>
+                <CloseRounded />
+              </IconButton>
+            </Stack>
+
+            <Stack
+              alignItems={{ xs: 'flex-start', sm: 'center' }}
+              direction={{ xs: 'column', sm: 'row' }}
+              justifyContent="space-between"
+              spacing={1}
+            >
               <Stack direction="row" flexWrap="wrap" gap={0.8}>
                 <Chip
                   icon={<SmartToyRounded />}
@@ -148,12 +158,22 @@ export const ChatWidget = () => {
                   sx={{ backgroundColor: 'rgba(255,255,255,0.18)', color: 'white' }}
                 />
               </Stack>
-            </Stack>
-            <Stack alignItems="flex-end" spacing={1}>
-              <StatusChip status={activeOperation.chatStatus} />
-              <IconButton onClick={() => setChatOpen(false)} sx={{ color: 'white' }}>
-                <CloseRounded />
-              </IconButton>
+              <StatusChip
+                label={
+                  activeOperation.chatStatus === 'Есть ответ администратора'
+                    ? 'Есть ответ'
+                    : activeOperation.chatStatus
+                }
+                status={activeOperation.chatStatus}
+                sx={{
+                  '& .MuiChip-label': {
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  },
+                  maxWidth: '100%',
+                }}
+              />
             </Stack>
           </Stack>
 
@@ -212,7 +232,7 @@ export const ChatWidget = () => {
                             : 'rgba(255,255,255,0.82)',
                         border: '1px solid rgba(15,23,42,0.06)',
                         borderRadius: '18px',
-                        maxWidth: 280,
+                        maxWidth: { xs: 300, sm: 340 },
                         p: 1.5,
                       }}
                     >
@@ -274,11 +294,7 @@ export const ChatWidget = () => {
               </Stack>
             ) : null}
 
-            <Typography color="text.secondary" variant="caption">
-              Ответы администратора концептуально приходят через Telegram-интеграцию.
-            </Typography>
-
-            <Stack direction="row" spacing={1}>
+            <Stack alignItems="flex-end" direction="row" spacing={1}>
               <IconButton onClick={() => setAttachmentsOpen(true)}>
                 <AttachFileRounded />
               </IconButton>
@@ -308,8 +324,7 @@ export const ChatWidget = () => {
         <DialogContent dividers>
           <Stack spacing={1.2}>
             <Typography color="text.secondary" variant="body2">
-              Можно приложить скриншот, файл или видео. В демонстрации показаны
-              типовые материалы, которые оператор увидит в Telegram.
+              Можно приложить скриншот, файл или видео
             </Typography>
 
             {attachmentPresets.map((attachment) => {

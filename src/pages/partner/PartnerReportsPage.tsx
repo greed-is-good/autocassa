@@ -22,7 +22,7 @@ export const PartnerReportsPage = () => (
     <Grid container spacing={2.2}>
       <Grid size={{ xs: 12, md: 4 }}>
         <MetricCard
-          hint="Объём операций по текущему расчётному дню"
+          hint="Текущий день"
           icon={<AssessmentRounded />}
           label="Сегодня к сверке"
           value="1 284 500 RUB"
@@ -30,7 +30,7 @@ export const PartnerReportsPage = () => (
       </Grid>
       <Grid size={{ xs: 12, md: 4 }}>
         <MetricCard
-          hint="Средний процент успешных зачислений за три дня"
+          hint="За 3 дня"
           icon={<ReceiptLongRounded />}
           label="Средний success rate"
           tone="success"
@@ -39,7 +39,7 @@ export const PartnerReportsPage = () => (
       </Grid>
       <Grid size={{ xs: 12, md: 4 }}>
         <MetricCard
-          hint="Следующая финализация закрытия дня"
+          hint="Следующий цикл"
           icon={<ReceiptLongRounded />}
           label="Ближайшая сверка"
           tone="warning"
@@ -51,7 +51,7 @@ export const PartnerReportsPage = () => (
     <SectionCard
       eyebrow="Партнёр"
       title="Отчётность"
-      subtitle="Отдельный контур отчётности по собственным операциям и статусам расчёта."
+      subtitle="Сверка и отчётные данные"
       action={<Chip color="primary" label="Только свой контур" />}
     >
       <TableContainer>
@@ -84,10 +84,9 @@ export const PartnerReportsPage = () => (
 
     <SectionCard
       title="API-выгрузки"
-      subtitle="В MVP партнёр получает отчётность во фронте и не редактирует системные сценарии."
     >
       <EmptyState
-        description="Для первой версии системы отдельная API-выгрузка партнёру не планируется. Заказчику можно показать это как осознанное ограничение MVP."
+        description="В первой версии отчётность доступна только во фронте"
         icon={<CloudOffRounded />}
         title="Выгрузки API недоступны в MVP"
       />

@@ -27,14 +27,13 @@ export const OwnerProcessingsPage = () => {
   return (
     <Stack className="autocassa-fade-up" spacing={3}>
       <Alert icon={<SyncAltRounded />} severity="info" sx={{ borderRadius: '20px' }}>
-        Логика MVP отражена явно: игрок выбирает только валюту, а процессинг
-        выбирается системой по настройке владельца.
+        Игрок выбирает только валюту, маршрут подставляется автоматически
       </Alert>
 
       <SectionCard
         eyebrow="Владелец"
         title="Процессинги и валюты"
-        subtitle="Связки валют с процессингами, приоритеты и активность маршрутов внутри MVP."
+        subtitle="Связки валют и маршрутов"
       >
         <TableContainer>
           <Table>
@@ -101,7 +100,7 @@ export const OwnerProcessingsPage = () => {
 
       <SectionCard
         title="Справочник процессингов"
-        subtitle="Показывает доступные и резервные маршруты, которые владелец может использовать в будущих спринтах."
+        subtitle="Активные и резервные маршруты"
       >
         <Stack spacing={1.4}>
           {processings.map((processing) => (

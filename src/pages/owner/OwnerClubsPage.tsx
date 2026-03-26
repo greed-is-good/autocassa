@@ -26,7 +26,7 @@ export const OwnerClubsPage = () => (
     <SectionCard
       eyebrow="Владелец"
       title="Клубы и интеграции"
-      subtitle="Список приложений и клубов с текущим статусом API, endpoint и результатом последней проверки."
+      subtitle="Статусы API и параметры клубов"
     >
       <Grid container spacing={2}>
         {clubs.map((club) => (
@@ -49,7 +49,7 @@ export const OwnerClubsPage = () => (
                 <Stack spacing={0.4}>
                   <Typography fontWeight={800}>{club.title}</Typography>
                   <Typography color="text.secondary" variant="body2">
-                    {club.appName} • {club.clubNumber}
+                    ID клуба: {club.clubNumber}
                   </Typography>
                 </Stack>
                 <Chip
@@ -75,7 +75,7 @@ export const OwnerClubsPage = () => (
 
     <SectionCard
       title="Реестр интеграций"
-      subtitle="Табличный вид для обсуждения с заказчиком и дальнейшей детализации контрактов API."
+      subtitle="Табличный реестр подключений"
     >
       <TableContainer>
         <Table>
@@ -95,7 +95,7 @@ export const OwnerClubsPage = () => (
                   <Stack spacing={0.25}>
                     <Typography fontWeight={800}>{club.title}</Typography>
                     <Typography color="text.secondary" variant="body2">
-                      {club.appName}
+                      ID клуба: {club.clubNumber}
                     </Typography>
                   </Stack>
                 </TableCell>

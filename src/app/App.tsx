@@ -1,117 +1,161 @@
 import {
-  AutoAwesomeRounded,
-  LanguageRounded,
-  LockOpenRounded,
+  AddCardRounded,
+  AdminPanelSettingsRounded,
+  ApartmentRounded,
+  BarChartRounded,
+  ChevronRightRounded,
+  CurrencyExchangeRounded,
+  GroupsRounded,
+  HandshakeRounded,
+  HistoryRounded,
+  HourglassTopRounded,
+  MenuRounded,
+  PersonOutlineRounded,
+  ReceiptLongRounded,
+  SpaceDashboardRounded,
+  TuneRounded,
 } from '@mui/icons-material'
 import {
   Box,
-  Chip,
   Container,
-  Grid,
+  Drawer,
+  IconButton,
   Stack,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
+import { useEffect, useState } from 'react'
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 
 import { ChatWidget } from '../components/ChatWidget'
 import { ModalHub } from '../components/ModalHub'
 import { RoleSwitcher } from '../components/RoleSwitcher'
 import { SidebarNav } from '../components/SidebarNav'
-import type { Role } from '../types'
-import { PrototypeProvider } from './PrototypeContext'
-import { PartnerOverviewPage } from '../pages/partner/PartnerOverviewPage'
-import { PartnerReportsPage } from '../pages/partner/PartnerReportsPage'
-import { PartnerTariffsPage } from '../pages/partner/PartnerTariffsPage'
 import { OwnerClubsPage } from '../pages/owner/OwnerClubsPage'
 import { OwnerDashboardPage } from '../pages/owner/OwnerDashboardPage'
 import { OwnerPartnersPage } from '../pages/owner/OwnerPartnersPage'
 import { OwnerPaymentsPage } from '../pages/owner/OwnerPaymentsPage'
 import { OwnerProcessingsPage } from '../pages/owner/OwnerProcessingsPage'
+import { PartnerOverviewPage } from '../pages/partner/PartnerOverviewPage'
+import { PartnerReportsPage } from '../pages/partner/PartnerReportsPage'
+import { PartnerTariffsPage } from '../pages/partner/PartnerTariffsPage'
 import { PlayerHistoryPage } from '../pages/player/PlayerHistoryPage'
 import { PlayerStatusPage } from '../pages/player/PlayerStatusPage'
 import { PlayerTopUpPage } from '../pages/player/PlayerTopUpPage'
+import type { Role } from '../types'
+import { PrototypeProvider } from './PrototypeContext'
 
 const navigationByRole = {
   player: {
     defaultPath: '/player/topup',
-    title: 'Контур игрока',
-    subtitle:
-      'Минимальный путь без регистрации: пополнение, ссылка на оплату, статус платежа, чат с администратором.',
+    title: 'Игрок',
+    subtitle: 'Пополнение, статус, история и чат.',
     items: [
       {
         label: 'Пополнение',
         path: '/player/topup',
-        description: 'Быстрая форма пополнения с автоматическим выбором процессинга.',
+        description: 'Форма пополнения.',
+        icon: AddCardRounded,
       },
       {
         label: 'Статус',
         path: '/player/status',
-        description: 'Рабочий экран после оплаты со статус-линией и исключениями MVP.',
+        description: 'Статус оплаты и зачисления.',
+        icon: HourglassTopRounded,
       },
       {
         label: 'История',
         path: '/player/history',
-        description: 'Mock-история операций без полноценного кабинета игрока.',
+        description: 'История операций.',
+        icon: HistoryRounded,
       },
     ],
   },
   partner: {
     defaultPath: '/partner/overview',
-    title: 'Контур партнёра',
-    subtitle:
-      'Отдельная область с собственными операциями, тарифами и отчётностью без доступа к системным настройкам.',
+    title: 'Партнёр',
+    subtitle: 'Свои операции, тарифы и отчётность.',
     items: [
       {
         label: 'Обзор',
         path: '/partner/overview',
-        description: 'Сводка метрик и таблица только по своим платежам.',
+        description: 'Сводка и платежи.',
+        icon: SpaceDashboardRounded,
       },
       {
         label: 'Тарифы',
         path: '/partner/tariffs',
-        description: 'Фиксированные курсы по связке валюта + процессинг.',
+        description: 'Курсы и ставки.',
+        icon: TuneRounded,
       },
       {
         label: 'Отчётность',
         path: '/partner/reports',
-        description: 'Ежедневная сверка и отчётные таблицы для партнёра.',
+        description: 'Сверка и отчёты.',
+        icon: BarChartRounded,
       },
     ],
   },
   owner: {
     defaultPath: '/owner/dashboard',
-    title: 'Контур владельца',
-    subtitle:
-      'Полноценная операционная панель: управление клубами, партнёрами, процессингами, тарифами и исключениями.',
+    title: 'Владелец',
+    subtitle: 'Платежи, клубы, процессинги и партнёры.',
     items: [
       {
         label: 'Дашборд',
         path: '/owner/dashboard',
-        description: 'Сводные метрики, алерты и быстрые переходы.',
+        description: 'Метрики и алерты.',
+        icon: SpaceDashboardRounded,
       },
       {
         label: 'Платежи',
         path: '/owner/payments',
-        description: 'Рабочий инструмент для ручной обработки и повторных зачислений.',
+        description: 'Операции и исключения.',
+        icon: ReceiptLongRounded,
       },
       {
         label: 'Клубы',
         path: '/owner/clubs',
-        description: 'Реестр приложений и статус подключения API.',
+        description: 'Статусы интеграций.',
+        icon: ApartmentRounded,
       },
       {
         label: 'Процессинги',
         path: '/owner/processings',
-        description: 'Связки валют и процессингов с логикой MVP.',
+        description: 'Валюты и маршруты.',
+        icon: CurrencyExchangeRounded,
       },
       {
         label: 'Партнёры',
         path: '/owner/partners',
-        description: 'Карточки партнёров, тарифы и журнал изменений.',
+        description: 'Партнёры и тарифы.',
+        icon: GroupsRounded,
       },
     ],
   },
 } as const
+
+const DESKTOP_SIDEBAR_WIDTH = 296
+const DESKTOP_SIDEBAR_COLLAPSED_WIDTH = 92
+
+const roleMetaByRole: Record<
+  Role,
+  { label: string; icon: typeof PersonOutlineRounded }
+> = {
+  player: {
+    label: 'Игрок',
+    icon: PersonOutlineRounded,
+  },
+  partner: {
+    label: 'Партнёр',
+    icon: HandshakeRounded,
+  },
+  owner: {
+    label: 'Владелец',
+    icon: AdminPanelSettingsRounded,
+  },
+}
 
 const resolveRole = (pathname: string): Role => {
   if (pathname.startsWith('/partner')) {
@@ -126,80 +170,180 @@ const resolveRole = (pathname: string): Role => {
 }
 
 const DemoShell = () => {
+  const theme = useTheme()
+  const isDesktop = useMediaQuery(theme.breakpoints.up('lg'))
   const location = useLocation()
   const navigate = useNavigate()
+  const [desktopSidebarExpanded, setDesktopSidebarExpanded] = useState(true)
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const role = resolveRole(location.pathname)
   const roleConfig = navigationByRole[role]
+  const roleMeta = roleMetaByRole[role]
+  const RoleIcon = roleMeta.icon
   const activeItem =
     roleConfig.items.find((item) => item.path === location.pathname) ?? roleConfig.items[0]
+  const sidebarWidth = desktopSidebarExpanded
+    ? DESKTOP_SIDEBAR_WIDTH
+    : DESKTOP_SIDEBAR_COLLAPSED_WIDTH
+
+  useEffect(() => {
+    if (isDesktop) {
+      setMobileSidebarOpen(false)
+    }
+  }, [isDesktop])
+
+  const handleSidebarToggle = () => {
+    if (isDesktop) {
+      setDesktopSidebarExpanded((current) => !current)
+      return
+    }
+
+    setMobileSidebarOpen((current) => !current)
+  }
+
+  const handleSidebarNavigate = () => {
+    if (!isDesktop) {
+      setMobileSidebarOpen(false)
+    }
+  }
 
   return (
     <Box pb={6} pt={3}>
+      <Drawer
+        ModalProps={{ keepMounted: true }}
+        onClose={() => setMobileSidebarOpen(false)}
+        open={mobileSidebarOpen}
+        PaperProps={{
+          sx: {
+            backgroundColor: 'transparent',
+            backgroundImage: 'none',
+            boxShadow: 'none',
+            p: 1.5,
+            width: 320,
+          },
+        }}
+        sx={{
+          display: { lg: 'none' },
+          '& .MuiBackdrop-root': {
+            backdropFilter: 'blur(4px)',
+            backgroundColor: 'rgba(15,23,42,0.24)',
+          },
+        }}
+        variant="temporary"
+      >
+        <Box sx={{ height: '100%' }}>
+          <SidebarNav
+            items={roleConfig.items}
+            onNavigate={handleSidebarNavigate}
+            subtitle={roleConfig.subtitle}
+            title={roleConfig.title}
+          />
+        </Box>
+      </Drawer>
+
       <Container maxWidth={false} sx={{ maxWidth: 1680 }}>
-        <Stack spacing={3}>
+        <Box
+          sx={{
+            alignItems: 'stretch',
+            display: 'flex',
+            gap: 3,
+          }}
+        >
           <Box
-            className="autocassa-panel autocassa-fade-up"
             sx={{
-              overflow: 'hidden',
-              position: 'relative',
-              px: { xs: 2.5, md: 4 },
-              py: { xs: 2.5, md: 3.5 },
+              display: { xs: 'none', lg: 'block' },
+              flexShrink: 0,
+              transition: 'width 220ms ease',
+              width: sidebarWidth,
             }}
           >
             <Box
               sx={{
-                background:
-                  'radial-gradient(circle at right top, rgba(255,122,26,0.26), transparent 28%), radial-gradient(circle at left top, rgba(31,115,242,0.32), transparent 34%)',
-                inset: 0,
-                position: 'absolute',
+                height: 'calc(100vh - 24px)',
+                position: 'sticky',
+                top: 0,
               }}
-            />
-            <Stack position="relative" spacing={3}>
-              <Stack
-                alignItems={{ xs: 'flex-start', lg: 'center' }}
-                direction={{ xs: 'column', lg: 'row' }}
-                justifyContent="space-between"
-                spacing={2}
-              >
-                <Stack spacing={0.8}>
-                  <Typography color="primary.main" fontWeight={800}>
-                    Автокасса / Demo Prototype
-                  </Typography>
-                  <Typography variant="h1">Кликабельный mock-интерфейс MVP</Typography>
-                  <Typography color="text.secondary" maxWidth={900}>
-                    Роли переключаются без авторизации, все данные и ответы моковые, а
-                    сценарии собраны так, будто систему уже можно согласовывать с
-                    заказчиком по логике и UX.
-                  </Typography>
-                </Stack>
-                <RoleSwitcher
-                  role={role}
-                  onChange={(nextRole) => navigate(navigationByRole[nextRole].defaultPath)}
-                />
-              </Stack>
-
-              <Stack direction="row" flexWrap="wrap" gap={1}>
-                <Chip icon={<LockOpenRounded />} label="Без реальной авторизации" />
-                <Chip icon={<LanguageRounded />} label="Русский интерфейс" />
-                <Chip icon={<AutoAwesomeRounded />} label="Моковые данные и состояния" />
-                <Chip color="primary" label={`Сейчас открыт: ${activeItem.label}`} />
-              </Stack>
-            </Stack>
-          </Box>
-
-          <Grid container spacing={3}>
-            <Grid size={{ xs: 12, lg: 3 }}>
+            >
               <SidebarNav
+                collapsed={!desktopSidebarExpanded}
                 items={roleConfig.items}
                 subtitle={roleConfig.subtitle}
                 title={roleConfig.title}
               />
-            </Grid>
-            <Grid size={{ xs: 12, lg: 9 }}>
-              <Outlet />
-            </Grid>
-          </Grid>
-        </Stack>
+            </Box>
+          </Box>
+
+          <Stack flexGrow={1} minWidth={0} spacing={2.5}>
+            <Box
+              className="autocassa-panel autocassa-fade-up"
+              sx={{
+                backgroundColor: 'rgba(255,255,255,0.84)',
+                px: { xs: 2, md: 3 },
+                py: { xs: 1.75, md: 2.25 },
+              }}
+            >
+              <Stack spacing={1.4}>
+                <Stack
+                  alignItems={{ xs: 'flex-start', lg: 'center' }}
+                  direction={{ xs: 'column', lg: 'row' }}
+                  justifyContent="space-between"
+                  spacing={2}
+                >
+                  <Stack
+                    alignItems={{ xs: 'flex-start', md: 'center' }}
+                    direction={{ xs: 'column', md: 'row' }}
+                    spacing={1.4}
+                  >
+                    <IconButton
+                      aria-label="Переключить меню"
+                      onClick={handleSidebarToggle}
+                      sx={{
+                        border: '1px solid rgba(15,23,42,0.08)',
+                        borderRadius: '14px',
+                        color: 'text.primary',
+                      }}
+                    >
+                      <MenuRounded />
+                    </IconButton>
+
+                    <Stack spacing={0.45}>
+                      <Typography
+                        fontSize={14}
+                        fontWeight={800}
+                        letterSpacing="0.08em"
+                        textTransform="uppercase"
+                      >
+                        Автокасса
+                      </Typography>
+                      <Stack
+                        alignItems="center"
+                        direction="row"
+                        flexWrap="wrap"
+                        spacing={1}
+                        useFlexGap
+                      >
+                        <Stack alignItems="center" direction="row" spacing={0.75}>
+                          <RoleIcon fontSize="small" />
+                          <Typography fontWeight={700}>{roleMeta.label}</Typography>
+                        </Stack>
+                        <ChevronRightRounded sx={{ color: 'text.disabled' }} />
+                        <Typography color="text.secondary" fontWeight={700}>
+                          {activeItem.label}
+                        </Typography>
+                      </Stack>
+                    </Stack>
+                  </Stack>
+                  <RoleSwitcher
+                    role={role}
+                    onChange={(nextRole) => navigate(navigationByRole[nextRole].defaultPath)}
+                  />
+                </Stack>
+              </Stack>
+            </Box>
+
+            <Outlet />
+          </Stack>
+        </Box>
       </Container>
 
       <ChatWidget />

@@ -5,7 +5,6 @@ import {
   TrendingUpRounded,
 } from '@mui/icons-material'
 import {
-  Alert,
   FormControl,
   Grid,
   InputLabel,
@@ -72,15 +71,10 @@ export const PartnerOverviewPage = () => {
 
   return (
     <Stack className="autocassa-fade-up" spacing={3}>
-      <Alert severity="info" sx={{ borderRadius: '20px' }}>
-        Партнёр видит только свой контур: собственные операции, тарифы и отчётность.
-        Системные настройки процессингов и клубов недоступны.
-      </Alert>
-
       <Grid container spacing={2.2}>
         <Grid size={{ xs: 12, md: 6, xl: 3 }}>
           <MetricCard
-            hint="Операции, относящиеся только к Orbit Traffic"
+            hint="Только свой контур"
             icon={<PaymentsRounded />}
             label="Количество операций"
             value={metrics.operations}
@@ -88,7 +82,7 @@ export const PartnerOverviewPage = () => {
         </Grid>
         <Grid size={{ xs: 12, md: 6, xl: 3 }}>
           <MetricCard
-            hint="Совокупный объём пополнений в текущем фильтре"
+            hint="По текущему фильтру"
             icon={<TrendingUpRounded />}
             label="Сумма пополнений"
             tone="brand"
@@ -97,7 +91,7 @@ export const PartnerOverviewPage = () => {
         </Grid>
         <Grid size={{ xs: 12, md: 6, xl: 3 }}>
           <MetricCard
-            hint="Успешно завершённые зачисления"
+            hint="Зачислено"
             icon={<TaskAltRounded />}
             label="Успешные зачисления"
             tone="success"
@@ -106,7 +100,7 @@ export const PartnerOverviewPage = () => {
         </Grid>
         <Grid size={{ xs: 12, md: 6, xl: 3 }}>
           <MetricCard
-            hint="Операции с ошибками или ручной обработкой"
+            hint="Ошибки и ручная обработка"
             icon={<ErrorOutlineRounded />}
             label="Операции с ошибками"
             tone="danger"
@@ -118,7 +112,7 @@ export const PartnerOverviewPage = () => {
       <SectionCard
         eyebrow="Партнёр"
         title="Платежи партнёра"
-        subtitle="Таблица видна только по собственным клубам и тарифам партнёра."
+        subtitle="Только свои операции"
       >
         <Stack spacing={2.5}>
           <Grid container spacing={2}>

@@ -95,17 +95,12 @@ export const OwnerPaymentsPage = () => {
 
   return (
     <Stack className="autocassa-fade-up" spacing={3}>
-      <Alert severity="info" sx={{ borderRadius: '20px' }}>
-        Экран предназначен для управления исключениями: поиск проблемных операций,
-        просмотр деталей, повторное зачисление и перевод в ручную обработку.
-      </Alert>
-
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, xl: 8 }}>
           <SectionCard
             eyebrow="Владелец"
             title="Платежи"
-            subtitle="Большая рабочая таблица операций с фильтрами по партнёрам, клубам, валютам и статусам."
+            subtitle="Операции, фильтры и исключения"
           >
             <Stack spacing={2.5}>
               <Grid container spacing={1.5}>
@@ -251,7 +246,7 @@ export const OwnerPaymentsPage = () => {
                 />
               ) : (
                 <EmptyState
-                  description="С текущими фильтрами подходящие операции не найдены. Для презентации клиенту empty-state уже предусмотрен."
+                  description="Попробуйте изменить фильтры"
                   icon={<ErrorOutlineRounded />}
                   title="Нет операций по выбранным фильтрам"
                 />
@@ -263,7 +258,7 @@ export const OwnerPaymentsPage = () => {
         <Grid size={{ xs: 12, xl: 4 }}>
           <SectionCard
             title="Детали операции"
-            subtitle="Правая панель помогает быстро решить исключение без ухода со списка."
+            subtitle="Карточка выбранной операции"
             action={
               selectedOperation ? (
                 <Stack direction="row" spacing={1}>
@@ -371,7 +366,7 @@ export const OwnerPaymentsPage = () => {
               </Stack>
             ) : (
               <EmptyState
-                description="Выберите операцию в таблице слева, чтобы открыть сводку или историю статусов."
+                description="Выберите строку в таблице слева"
                 icon={<AccountTreeRounded />}
                 title="Операция не выбрана"
               />

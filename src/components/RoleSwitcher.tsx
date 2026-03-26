@@ -19,9 +19,10 @@ export const RoleSwitcher = ({ role, onChange }: RoleSwitcherProps) => (
     exclusive
     size="small"
     sx={{
-      backgroundColor: 'rgba(255,255,255,0.72)',
-      borderRadius: '16px',
-      p: 0.5,
+      backgroundColor: 'rgba(248,250,252,0.96)',
+      border: '1px solid rgba(15,23,42,0.08)',
+      borderRadius: '14px',
+      p: 0.35,
     }}
     value={role}
     onChange={(_, nextRole: Role | null) => {
@@ -35,9 +36,10 @@ export const RoleSwitcher = ({ role, onChange }: RoleSwitcherProps) => (
         key={item}
         sx={{
           border: 'none',
-          borderRadius: '12px !important',
+          borderRadius: '10px !important',
+          fontSize: 13,
           fontWeight: 800,
-          px: 2,
+          px: 1.8,
         }}
         value={item}
       >

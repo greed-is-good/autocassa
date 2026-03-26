@@ -48,7 +48,7 @@ export const OwnerPartnersPage = () => {
           <SectionCard
             eyebrow="Владелец"
             title="Партнёры"
-            subtitle="Отдельный контур с доступными клубами, валютами, процессингами и тарифами."
+            subtitle="Контур доступа и тарифов"
             action={
               <Button
                 onClick={() => openModal({ type: 'createPartner' })}
@@ -95,7 +95,7 @@ export const OwnerPartnersPage = () => {
           <Stack spacing={3}>
             <SectionCard
               title="Карточка партнёра"
-              subtitle="Основные параметры, доступы и ограничения по выбранному партнёру."
+              subtitle="Основные параметры партнёра"
               action={
                 <Button
                   onClick={() => openModal({ type: 'createPartner' })}
@@ -163,7 +163,7 @@ export const OwnerPartnersPage = () => {
 
             <SectionCard
               title="Фиксированные курсы"
-              subtitle="Настройка тарифов по связке валюта + процессинг и история их изменения."
+              subtitle="Ставки и журнал изменений"
             >
               <TableContainer>
                 <Table>

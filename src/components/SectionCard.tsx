@@ -20,8 +20,13 @@ export const SectionCard = ({
 }: SectionCardProps) => (
   <Card className={className}>
     <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
-      <Stack direction="row" justifyContent="space-between" spacing={2}>
-        <Stack spacing={0.75}>
+      <Stack
+        alignItems={{ xs: 'flex-start', md: 'flex-start' }}
+        direction="row"
+        justifyContent="space-between"
+        spacing={2}
+      >
+        <Stack minWidth={0} spacing={0.75}>
           {eyebrow ? (
             <Typography
               color="primary.main"
@@ -35,7 +40,15 @@ export const SectionCard = ({
           ) : null}
           <Typography variant="h3">{title}</Typography>
           {subtitle ? (
-            <Typography color="text.secondary" maxWidth="70%">
+            <Typography
+              color="text.secondary"
+              sx={{
+                maxWidth: '100%',
+                overflow: { lg: 'hidden' },
+                textOverflow: { lg: 'ellipsis' },
+                whiteSpace: { xs: 'normal', lg: 'nowrap' },
+              }}
+            >
               {subtitle}
             </Typography>
           ) : null}

@@ -92,11 +92,11 @@ const buildCurrentPlayerOperation = (
               : undefined,
     apiRequestId:
       scenario === 'processing' || scenario === 'success'
-        ? 'royal-req-778241'
+        ? 'pp-req-778241'
         : scenario === 'credit_error'
-          ? 'summit-req-542201'
+          ? 'sp-req-542201'
           : scenario === 'manual'
-            ? 'royal-req-778190'
+            ? 'pp-req-778190'
             : undefined,
   }
 }
@@ -139,7 +139,7 @@ export const PrototypeProvider = ({ children }: PropsWithChildren) => {
         {
           id: `admin-${Date.now()}`,
           author: 'admin',
-          text: 'Сообщение получено. Оператор уже видит его в Telegram и ответит в этом окне.',
+          text: 'Сообщение получено, оператор уже видит его в Telegram и ответит в этом окне',
           time: new Date().toLocaleTimeString('ru-RU', {
             hour: '2-digit',
             minute: '2-digit',

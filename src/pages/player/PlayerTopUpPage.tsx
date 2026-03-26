@@ -1,16 +1,12 @@
 import {
   ChatRounded,
   KeyboardArrowRightRounded,
-  MonetizationOnRounded,
 } from '@mui/icons-material'
 import {
-  Alert,
+  ButtonBase,
   Box,
   Button,
-  Card,
-  CardActionArea,
   Chip,
-  Divider,
   Grid,
   MenuItem,
   Stack,
@@ -48,23 +44,13 @@ export const PlayerTopUpPage = () => {
       <SectionCard
         eyebrow="Игрок"
         title="Пополнение баланса"
-        subtitle="Максимально простой сценарий MVP: игрок выбирает клуб, вводит номер аккаунта и сумму, а процессинг подбирается системой автоматически по валюте."
       >
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, lg: 7 }}>
             <Stack spacing={2.5}>
-              <Alert
-                icon={<MonetizationOnRounded />}
-                severity="info"
-                sx={{ borderRadius: '18px' }}
-              >
-                Процессинг не выбирается вручную. Для каждой валюты на MVP уже
-                закреплён один маршрут оплаты.
-              </Alert>
-
               <TextField
                 fullWidth
-                label="Приложение / клуб"
+                label="Приложение"
                 select
                 value={playerDraft.clubId}
                 onChange={(event) => {
@@ -86,7 +72,7 @@ export const PlayerTopUpPage = () => {
                     key={club.id}
                     value={club.id}
                   >
-                    {club.title} • {club.appName}
+                    {club.title}
                     {club.apiStatus === 'Вне MVP' ? ' • вне MVP' : ''}
                   </MenuItem>
                 ))}
@@ -135,50 +121,63 @@ export const PlayerTopUpPage = () => {
 
               <Stack spacing={1.4}>
                 <Typography fontWeight={800}>Валюта оплаты</Typography>
-                <Grid container spacing={1.5}>
+                <Stack spacing={1.25}>
                   {currencyBindings.map((binding) => {
                     const processing = getProcessingById(binding.processingId)
                     const isActive = binding.currency === playerDraft.currency
 
                     return (
-                      <Grid key={binding.currency} size={{ xs: 12, md: 4 }}>
-                        <Card
-                          sx={{
-                            borderColor: isActive
-                              ? 'primary.main'
-                              : 'rgba(15,23,42,0.08)',
-                            boxShadow: isActive
-                              ? '0 18px 40px rgba(31,115,242,0.14)'
-                              : undefined,
-                          }}
+                      <ButtonBase
+                        key={binding.currency}
+                        onClick={() => handleCurrencyChange(binding.currency)}
+                        sx={{
+                          backgroundColor: isActive
+                            ? 'rgba(31,115,242,0.06)'
+                            : 'rgba(255,255,255,0.84)',
+                          border: '1px solid',
+                          borderColor: isActive
+                            ? 'primary.main'
+                            : 'rgba(15,23,42,0.08)',
+                          borderRadius: '22px',
+                          justifyContent: 'flex-start',
+                          px: 2.2,
+                          py: 1.9,
+                          textAlign: 'left',
+                          width: '100%',
+                        }}
+                      >
+                        <Stack
+                          direction={{ xs: 'column', md: 'row' }}
+                          justifyContent="space-between"
+                          spacing={2}
+                          width="100%"
                         >
-                          <CardActionArea onClick={() => handleCurrencyChange(binding.currency)}>
-                            <Stack p={2.2} spacing={1.2}>
-                              <Stack
-                                alignItems="center"
-                                direction="row"
-                                justifyContent="space-between"
-                              >
-                                <Typography variant="h3">{binding.currency}</Typography>
-                                {isActive ? (
-                                  <Chip color="primary" label="Выбрано" size="small" />
-                                ) : null}
-                              </Stack>
-                              <Typography color="text.secondary" variant="body2">
-                                {binding.rateLabel}
-                              </Typography>
-                              <Divider />
-                              <Typography fontWeight={700}>{processing.title}</Typography>
-                              <Typography color="text.secondary" variant="body2">
-                                {binding.systemNote}
-                              </Typography>
+                          <Stack spacing={0.45}>
+                            <Stack alignItems="center" direction="row" spacing={1}>
+                              <Typography variant="h3">{binding.currency}</Typography>
+                              {isActive ? (
+                                <Chip color="primary" label="Выбрано" size="small" />
+                              ) : null}
                             </Stack>
-                          </CardActionArea>
-                        </Card>
-                      </Grid>
+                            <Typography color="text.secondary" variant="body2">
+                              {binding.rateLabel}
+                            </Typography>
+                          </Stack>
+
+                          <Stack
+                            alignItems={{ xs: 'flex-start', md: 'flex-end' }}
+                            spacing={0.45}
+                          >
+                            <Typography fontWeight={700}>{processing.title}</Typography>
+                            <Typography color="text.secondary" variant="body2">
+                              {binding.payoutWindow}
+                            </Typography>
+                          </Stack>
+                        </Stack>
+                      </ButtonBase>
                     )
                   })}
-                </Grid>
+                </Stack>
               </Stack>
 
               <Box
@@ -196,11 +195,9 @@ export const PlayerTopUpPage = () => {
                 }}
               >
                 <Stack spacing={0.5}>
-                  <Typography fontWeight={800}>
-                    Нужна помощь по оплате или идентификатору аккаунта?
-                  </Typography>
+                  <Typography fontWeight={800}>Нужна помощь?</Typography>
                   <Typography color="text.secondary" variant="body2">
-                    Открой чат с администратором прямо из формы пополнения.
+                    Чат доступен прямо из формы
                   </Typography>
                 </Stack>
                 <Button
@@ -220,12 +217,11 @@ export const PlayerTopUpPage = () => {
               <SectionCard
                 className="h-full"
                 title="Детали операции"
-                subtitle="Система заранее знает, какой процессинг использовать для выбранной валюты."
                 action={<Chip color="primary" label="Готово к оплате" />}
               >
                 <Stack spacing={2}>
                   {[
-                    ['Выбранный клуб', `${selectedClub.title} • ${selectedClub.appName}`],
+                    ['Приложение', selectedClub.title],
                     ['Номер клуба', playerDraft.clubNumber],
                     ['Номер аккаунта', playerDraft.accountId],
                     [
@@ -249,12 +245,6 @@ export const PlayerTopUpPage = () => {
                     </Stack>
                   ))}
 
-                  <Divider />
-
-                  <Alert severity="success" sx={{ borderRadius: '18px' }}>
-                    После перехода к оплате игрок получает ссылку и дальше работает только
-                    со статусом операции.
-                  </Alert>
                 </Stack>
               </SectionCard>
 

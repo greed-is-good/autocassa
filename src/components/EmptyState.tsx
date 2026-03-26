@@ -45,9 +45,18 @@ export const EmptyState = ({
     >
       {icon}
     </Box>
-    <Stack spacing={1} maxWidth={420}>
+    <Stack maxWidth={420} spacing={1}>
       <Typography variant="h3">{title}</Typography>
-      <Typography color="text.secondary">{description}</Typography>
+      <Typography
+        color="text.secondary"
+        sx={{
+          overflow: { md: 'hidden' },
+          textOverflow: { md: 'ellipsis' },
+          whiteSpace: { xs: 'normal', md: 'nowrap' },
+        }}
+      >
+        {description}
+      </Typography>
     </Stack>
     {actionLabel && onAction ? (
       <Button onClick={onAction} variant="contained">

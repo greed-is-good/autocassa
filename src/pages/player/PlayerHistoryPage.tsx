@@ -1,5 +1,5 @@
 import { SearchRounded } from '@mui/icons-material'
-import { InputAdornment, Stack, TextField, Typography } from '@mui/material'
+import { InputAdornment, Stack, TextField } from '@mui/material'
 import { useDeferredValue, useMemo, useState } from 'react'
 
 import { usePrototype } from '../../app/PrototypeContext'
@@ -31,7 +31,7 @@ export const PlayerHistoryPage = () => {
       <SectionCard
         eyebrow="Игрок"
         title="История операций"
-        subtitle="Mock-экран истории без авторизации: поиск по номеру операции или аккаунту, понятные статусы оплаты и зачисления."
+        subtitle="Поиск по номеру операции или аккаунту"
       >
         <Stack spacing={2.5}>
           <TextField
@@ -48,17 +48,12 @@ export const PlayerHistoryPage = () => {
             onChange={(event) => setQuery(event.target.value)}
           />
 
-          <Typography color="text.secondary" variant="body2">
-            Экран нужен для демонстрации будущего UX. В MVP игрок не входит в личный
-            кабинет, а видит историю как отдельный упрощённый сценарий.
-          </Typography>
-
           {filteredOperations.length > 0 ? (
             <OperationsTable operations={filteredOperations} />
           ) : (
             <EmptyState
               actionLabel="Сбросить фильтр"
-              description="По указанному номеру операции или аккаунту ничего не найдено. Для показа клиенту это отдельное empty-state поведение уже подготовлено."
+              description="По номеру операции или аккаунту ничего не найдено"
               icon={<SearchRounded />}
               onAction={() => setQuery('')}
               title="История не найдена"
