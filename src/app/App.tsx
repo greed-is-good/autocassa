@@ -26,7 +26,7 @@ import {
   useTheme,
 } from '@mui/material'
 import { useEffect, useState } from 'react'
-import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { HashRouter, Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 
 import { ChatWidget } from '../components/ChatWidget'
 import { ModalHub } from '../components/ModalHub'
@@ -354,7 +354,7 @@ const DemoShell = () => {
 
 export const App = () => (
   <PrototypeProvider>
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         <Route element={<DemoShell />}>
           <Route element={<Navigate replace to="/player/topup" />} index />
@@ -374,6 +374,6 @@ export const App = () => (
           <Route element={<OwnerPartnersPage />} path="/owner/partners" />
         </Route>
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   </PrototypeProvider>
 )
