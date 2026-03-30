@@ -1,13 +1,18 @@
 import {
   AccountBalanceWalletRounded,
-  ErrorRounded,
-  RocketLaunchRounded,
+  DescriptionRounded,
   TaskAltRounded,
 } from '@mui/icons-material'
 import {
   ButtonBase,
   Grid,
   Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   Typography,
 } from '@mui/material'
 import { useMemo } from 'react'
@@ -20,80 +25,90 @@ import {
   formatAmount,
   getClubById,
   getPartnerById,
+  getProcessingById,
   ownerQuickLinks,
 } from '../../data/mockData'
 import { StatusChip } from '../../components/StatusChip'
+
+const CURRENT_MONTH = '.03.2026'
 
 export const OwnerDashboardPage = () => {
   const navigate = useNavigate()
   const { allOperations, setDetailTab, setSelectedOperationId } = usePrototype()
 
-  const metrics = useMemo(() => {
-    const totalAmount = allOperations.reduce(
-      (accumulator, operation) => accumulator + operation.amount,
-      0,
-    )
-    const successful = allOperations.filter(
-      (operation) => operation.creditStatus === 'Зачислено',
-    ).length
-    const exceptions = allOperations.filter(
-      (operation) =>
-        operation.creditStatus === 'Ошибка зачисления' ||
-        operation.creditStatus === 'Требует ручной обработки',
-    ).length
+  const monthOperations = useMemo(
+    () => allOperations.filter((operation) => operation.createdAt.includes(CURRENT_MONTH)),
+    [allOperations],
+  )
 
-    return {
-      totalAmount: `${formatAmount(totalAmount, 'RUB')} RUB`,
-      successful,
-      exceptions,
-    }
-  }, [allOperations])
+  const processingTotals = useMemo(() => {
+    const grouped = new Map<string, { title: string; total: number; currency: string }>()
+    monthOperations.forEach((operation) => {
+      const key = `${operation.processingId}-${operation.currency}`
+      const bucket = grouped.get(key) ?? {
+        title: getProcessingById(operation.processingId).title,
+        total: 0,
+        currency: operation.currency,
+      }
+      bucket.total += operation.amount
+      grouped.set(key, bucket)
+    })
+    return Array.from(grouped.values())
+  }, [monthOperations])
+
+  const currencyTotals = useMemo(() => {
+    const grouped = new Map<string, number>()
+    monthOperations.forEach((operation) => {
+      grouped.set(operation.currency, (grouped.get(operation.currency) ?? 0) + operation.amount)
+    })
+    return Array.from(grouped.entries())
+  }, [monthOperations])
+
+  const successfulWithReceipt = useMemo(
+    () =>
+      monthOperations.filter(
+        (operation) =>
+          operation.creditStatus === 'Зачислено' && !!operation.receiptAttachment,
+      ).length,
+    [monthOperations],
+  )
 
   return (
     <Stack className="autocassa-fade-up" spacing={3}>
       <Grid container spacing={2.2}>
-        <Grid size={{ xs: 12, md: 6, xl: 3 }}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <MetricCard
-            hint="Всего в системе"
+            hint="Март 2026"
             icon={<AccountBalanceWalletRounded />}
-            label="Операций в системе"
-            value={allOperations.length.toString()}
+            label="Всего пополнений за месяц"
+            value={monthOperations.length.toString()}
           />
         </Grid>
-        <Grid size={{ xs: 12, md: 6, xl: 3 }}>
-          <MetricCard
-            hint="Общий объём"
-            icon={<RocketLaunchRounded />}
-            label="Сумма пополнений"
-            tone="brand"
-            value={metrics.totalAmount}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6, xl: 3 }}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <MetricCard
             hint="Подтверждено клубами"
             icon={<TaskAltRounded />}
             label="Успешные зачисления"
             tone="success"
-            value={metrics.successful.toString()}
+            value={
+              monthOperations
+                .filter((operation) => operation.creditStatus === 'Зачислено')
+                .length.toString()
+            }
           />
         </Grid>
-        <Grid size={{ xs: 12, md: 6, xl: 3 }}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <MetricCard
-            hint="Требуют внимания"
-            icon={<ErrorRounded />}
-            label="Исключения"
-            tone="danger"
-            value={metrics.exceptions.toString()}
+            hint="Receipt review"
+            icon={<DescriptionRounded />}
+            label="Успешные операции с чеком"
+            tone="brand"
+            value={successfulWithReceipt.toString()}
           />
         </Grid>
       </Grid>
 
-      <SectionCard
-        eyebrow="Владелец"
-        title="Быстрые переходы"
-        subtitle="Основные разделы системы"
-      >
+      <SectionCard eyebrow="Владелец" title="Быстрые переходы" subtitle="Основные разделы системы">
         <Grid container spacing={1.5}>
           {ownerQuickLinks.map((item) => (
             <Grid key={item.id} size={{ xs: 12, md: 6, xl: 3 }}>
@@ -121,7 +136,61 @@ export const OwnerDashboardPage = () => {
         </Grid>
       </SectionCard>
 
-      <SectionCard title="Последние операции" subtitle="Последние события">
+      <Grid container spacing={3}>
+        <Grid size={{ xs: 12, xl: 6 }}>
+          <SectionCard title="Суммы по процессингам" subtitle="Разбивка по маршрутам и валютам">
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Процессинг</TableCell>
+                    <TableCell>Валюта</TableCell>
+                    <TableCell align="right">Сумма</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {processingTotals.map((item) => (
+                    <TableRow key={`${item.title}-${item.currency}`}>
+                      <TableCell>{item.title}</TableCell>
+                      <TableCell>{item.currency}</TableCell>
+                      <TableCell align="right">
+                        {formatAmount(item.total, item.currency as 'RUB' | 'KZT' | 'USDT')}{' '}
+                        {item.currency}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </SectionCard>
+        </Grid>
+        <Grid size={{ xs: 12, xl: 6 }}>
+          <SectionCard title="Суммы по валютам" subtitle="Сводка по валютным потокам">
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Валюта</TableCell>
+                    <TableCell align="right">Сумма</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {currencyTotals.map(([currency, total]) => (
+                    <TableRow key={currency}>
+                      <TableCell>{currency}</TableCell>
+                      <TableCell align="right">
+                        {formatAmount(total, currency as 'RUB' | 'KZT' | 'USDT')} {currency}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </SectionCard>
+        </Grid>
+      </Grid>
+
+      <SectionCard title="Последние операции" subtitle="Журнал последних событий">
         <Stack spacing={1.2}>
           {allOperations.slice(0, 5).map((operation) => {
             const club = getClubById(operation.clubId)

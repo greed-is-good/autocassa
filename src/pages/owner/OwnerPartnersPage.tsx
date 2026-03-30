@@ -19,11 +19,11 @@ import { useMemo, useState } from 'react'
 import { usePrototype } from '../../app/PrototypeContext'
 import { SectionCard } from '../../components/SectionCard'
 import {
+  commissionLog,
   getClubById,
   getProcessingById,
+  partnerProcessingCommissions,
   partners,
-  tariffLog,
-  tariffRates,
 } from '../../data/mockData'
 
 export const OwnerPartnersPage = () => {
@@ -32,12 +32,15 @@ export const OwnerPartnersPage = () => {
 
   const selectedPartner =
     partners.find((partner) => partner.id === selectedPartnerId) ?? partners[0]
-  const selectedRates = useMemo(
-    () => tariffRates.filter((rate) => rate.partnerId === selectedPartner.id),
+  const selectedCommissions = useMemo(
+    () =>
+      partnerProcessingCommissions.filter(
+        (commission) => commission.partnerId === selectedPartner.id,
+      ),
     [selectedPartner.id],
   )
   const selectedLog = useMemo(
-    () => tariffLog.filter((item) => item.partnerId === selectedPartner.id),
+    () => commissionLog.filter((item) => item.partnerId === selectedPartner.id),
     [selectedPartner.id],
   )
 
@@ -48,7 +51,7 @@ export const OwnerPartnersPage = () => {
           <SectionCard
             eyebrow="Владелец"
             title="Партнёры"
-            subtitle="Контур доступа и тарифов"
+            subtitle="Контур доступа и ставок"
             action={
               <Button
                 onClick={() => openModal({ type: 'createPartner' })}
@@ -102,26 +105,22 @@ export const OwnerPartnersPage = () => {
                   startIcon={<GroupsRounded />}
                   variant="outlined"
                 >
-                  Редактировать карточку
+                  Редактировать
                 </Button>
               }
             >
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <Stack spacing={0.5}>
-                    <Typography color="text.secondary" variant="body2">
-                      Менеджер
-                    </Typography>
-                    <Typography fontWeight={800}>{selectedPartner.manager}</Typography>
-                  </Stack>
+                  <Typography color="text.secondary" variant="body2">
+                    Менеджер
+                  </Typography>
+                  <Typography fontWeight={800}>{selectedPartner.manager}</Typography>
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <Stack spacing={0.5}>
-                    <Typography color="text.secondary" variant="body2">
-                      Telegram
-                    </Typography>
-                    <Typography fontWeight={800}>{selectedPartner.telegram}</Typography>
-                  </Stack>
+                  <Typography color="text.secondary" variant="body2">
+                    Telegram
+                  </Typography>
+                  <Typography fontWeight={800}>{selectedPartner.telegram}</Typography>
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <Typography color="text.secondary" mb={0.8} variant="body2">
@@ -162,8 +161,8 @@ export const OwnerPartnersPage = () => {
             </SectionCard>
 
             <SectionCard
-              title="Фиксированные курсы"
-              subtitle="Ставки и журнал изменений"
+              title="Комиссии по процессингам"
+              subtitle="Ставки и лог изменений"
             >
               <TableContainer>
                 <Table>
@@ -171,28 +170,33 @@ export const OwnerPartnersPage = () => {
                     <TableRow>
                       <TableCell>Валюта</TableCell>
                       <TableCell>Процессинг</TableCell>
-                      <TableCell>Курс</TableCell>
+                      <TableCell>Комиссия</TableCell>
                       <TableCell>Окно расчёта</TableCell>
                       <TableCell>Обновлено</TableCell>
                       <TableCell align="right">Действие</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {selectedRates.map((rate) => (
-                      <TableRow key={rate.id}>
+                    {selectedCommissions.map((commission) => (
+                      <TableRow key={commission.id}>
                         <TableCell>
-                          <Typography fontWeight={800}>{rate.currency}</Typography>
+                          <Typography fontWeight={800}>{commission.currency}</Typography>
                         </TableCell>
-                        <TableCell>{getProcessingById(rate.processingId).title}</TableCell>
-                        <TableCell>{rate.fixedRate}</TableCell>
-                        <TableCell>{rate.settlementWindow}</TableCell>
+                        <TableCell>{getProcessingById(commission.processingId).title}</TableCell>
+                        <TableCell>{commission.commissionRate}</TableCell>
+                        <TableCell>{commission.settlementWindow}</TableCell>
                         <TableCell>
-                          {rate.updatedAt} • {rate.updatedBy}
+                          {commission.updatedAt} • {commission.updatedBy}
                         </TableCell>
                         <TableCell align="right">
                           <IconButton
                             color="primary"
-                            onClick={() => openModal({ type: 'editRate', rateId: rate.id })}
+                            onClick={() =>
+                              openModal({
+                                type: 'editCommission',
+                                commissionId: commission.id,
+                              })
+                            }
                           >
                             <EditRounded />
                           </IconButton>
@@ -204,7 +208,7 @@ export const OwnerPartnersPage = () => {
               </TableContainer>
 
               <Stack mt={2.5} spacing={1.1}>
-                <Typography fontWeight={800}>Лог изменений тарифов</Typography>
+                <Typography fontWeight={800}>Лог изменений комиссий</Typography>
                 {selectedLog.map((item) => (
                   <Stack
                     direction="row"

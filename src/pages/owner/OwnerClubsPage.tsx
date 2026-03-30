@@ -13,7 +13,7 @@ import {
 } from '@mui/material'
 
 import { SectionCard } from '../../components/SectionCard'
-import { clubs } from '../../data/mockData'
+import { chipPriceRules, clubs, formatAmount, getChipPriceRule } from '../../data/mockData'
 
 const checkColor = {
   Успешно: 'success',
@@ -21,12 +21,14 @@ const checkColor = {
   Ошибка: 'error',
 } as const
 
+const currencies = ['RUB', 'KZT', 'USDT'] as const
+
 export const OwnerClubsPage = () => (
   <Stack className="autocassa-fade-up" spacing={3}>
     <SectionCard
       eyebrow="Владелец"
       title="Клубы и интеграции"
-      subtitle="Статусы API и параметры клубов"
+      subtitle="Статусы API и базовые параметры клубов"
     >
       <Grid container spacing={2}>
         {clubs.map((club) => (
@@ -40,22 +42,14 @@ export const OwnerClubsPage = () => (
                 p: 2.2,
               }}
             >
-              <Stack
-                alignItems="center"
-                direction="row"
-                justifyContent="space-between"
-                spacing={1.5}
-              >
+              <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={1.5}>
                 <Stack spacing={0.4}>
                   <Typography fontWeight={800}>{club.title}</Typography>
                   <Typography color="text.secondary" variant="body2">
                     ID клуба: {club.clubNumber}
                   </Typography>
                 </Stack>
-                <Chip
-                  color={club.apiStatus === 'API подключено' ? 'success' : 'default'}
-                  label={club.apiStatus}
-                />
+                <Chip color={club.apiStatus === 'API подключено' ? 'success' : 'default'} label={club.apiStatus} />
               </Stack>
               <Typography color="text.secondary" variant="body2">
                 Endpoint: {club.endpoint}
@@ -63,7 +57,7 @@ export const OwnerClubsPage = () => (
               <Chip
                 color={checkColor[club.lastCheckStatus]}
                 icon={<CheckCircleRounded />}
-                label={`Последняя проверка: ${club.lastCheckStatus}`}
+                label={`Проверка: ${club.lastCheckStatus}`}
                 sx={{ width: 'fit-content' }}
               />
               <Typography variant="body2">{club.lastCheckNote}</Typography>
@@ -73,10 +67,7 @@ export const OwnerClubsPage = () => (
       </Grid>
     </SectionCard>
 
-    <SectionCard
-      title="Реестр интеграций"
-      subtitle="Табличный реестр подключений"
-    >
+    <SectionCard title="Реестр интеграций" subtitle="Табличный реестр подключений">
       <TableContainer>
         <Table>
           <TableHead>
@@ -92,20 +83,11 @@ export const OwnerClubsPage = () => (
             {clubs.map((club) => (
               <TableRow key={club.id}>
                 <TableCell>
-                  <Stack spacing={0.25}>
-                    <Typography fontWeight={800}>{club.title}</Typography>
-                    <Typography color="text.secondary" variant="body2">
-                      ID клуба: {club.clubNumber}
-                    </Typography>
-                  </Stack>
+                  <Typography fontWeight={800}>{club.title}</Typography>
                 </TableCell>
                 <TableCell>{club.clubNumber}</TableCell>
                 <TableCell>
-                  <Chip
-                    color={club.apiStatus === 'API подключено' ? 'success' : 'default'}
-                    label={club.apiStatus}
-                    size="small"
-                  />
+                  <Chip color={club.apiStatus === 'API подключено' ? 'success' : 'default'} label={club.apiStatus} size="small" />
                 </TableCell>
                 <TableCell>
                   <Stack direction="row" spacing={1}>
@@ -121,6 +103,49 @@ export const OwnerClubsPage = () => (
           </TableBody>
         </Table>
       </TableContainer>
+    </SectionCard>
+
+    <SectionCard title="Стоимость 1 фишки" subtitle="Матрица клуб + валюта">
+      <TableContainer>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Приложение</TableCell>
+              <TableCell>ID клуба</TableCell>
+              {currencies.map((currency) => (
+                <TableCell key={currency} align="right">
+                  {currency}
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {clubs.map((club) => (
+              <TableRow key={club.id}>
+                <TableCell>
+                  <Typography fontWeight={800}>{club.title}</Typography>
+                </TableCell>
+                <TableCell>{club.clubNumber}</TableCell>
+                {currencies.map((currency) => {
+                  const rule = getChipPriceRule(club.id, currency)
+                  return (
+                    <TableCell key={`${club.id}-${currency}`} align="right">
+                      {rule ? `${formatAmount(rule.pricePerChip, currency)} ${currency}` : '—'}
+                    </TableCell>
+                  )
+                })}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <Stack mt={2} spacing={0.5}>
+        <Typography fontWeight={800}>Всего правил: {chipPriceRules.length}</Typography>
+        <Typography color="text.secondary" variant="body2">
+          Источник расчёта фишек для player flow
+        </Typography>
+      </Stack>
     </SectionCard>
   </Stack>
 )

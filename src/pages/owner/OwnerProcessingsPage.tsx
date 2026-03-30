@@ -27,21 +27,22 @@ export const OwnerProcessingsPage = () => {
   return (
     <Stack className="autocassa-fade-up" spacing={3}>
       <Alert icon={<SyncAltRounded />} severity="info" sx={{ borderRadius: '20px' }}>
-        Игрок выбирает только валюту, маршрут подставляется автоматически
+        Игрок выбирает только валюту, процессинг назначается по настройке владельца
       </Alert>
 
       <SectionCard
         eyebrow="Владелец"
         title="Процессинги и валюты"
-        subtitle="Связки валют и маршрутов"
+        subtitle="Связки валют и режимов подтверждения"
       >
         <TableContainer>
           <Table>
             <TableHead>
               <TableRow>
                 <TableCell>Валюта</TableCell>
-                <TableCell>Привязанный процессинг</TableCell>
+                <TableCell>Процессинг</TableCell>
                 <TableCell>Статус</TableCell>
+                <TableCell>Режим</TableCell>
                 <TableCell>Приоритет</TableCell>
                 <TableCell>Условия</TableCell>
                 <TableCell align="right">Действие</TableCell>
@@ -70,6 +71,11 @@ export const OwnerProcessingsPage = () => {
                         size="small"
                       />
                     </TableCell>
+                    <TableCell>
+                      {processing.confirmationMode === 'receipt_review'
+                        ? 'По реквизитам + PDF-чек'
+                        : 'По ссылке'}
+                    </TableCell>
                     <TableCell>{processing.priority}</TableCell>
                     <TableCell>
                       <Stack spacing={0.25}>
@@ -81,13 +87,11 @@ export const OwnerProcessingsPage = () => {
                     </TableCell>
                     <TableCell align="right">
                       <Button
-                        onClick={() =>
-                          openModal({ type: 'editBinding', currency: binding.currency })
-                        }
+                        onClick={() => openModal({ type: 'editBinding', currency: binding.currency })}
                         startIcon={<EditRounded />}
                         variant="outlined"
                       >
-                        Редактировать связку
+                        Редактировать
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -98,10 +102,7 @@ export const OwnerProcessingsPage = () => {
         </TableContainer>
       </SectionCard>
 
-      <SectionCard
-        title="Справочник процессингов"
-        subtitle="Активные и резервные маршруты"
-      >
+      <SectionCard title="Справочник процессингов" subtitle="Активные и резервные маршруты">
         <Stack spacing={1.4}>
           {processings.map((processing) => (
             <Stack
@@ -121,6 +122,11 @@ export const OwnerProcessingsPage = () => {
                 <Typography color="text.secondary" variant="body2">
                   {processing.code} • {processing.providerNote}
                 </Typography>
+                {processing.bankDetails?.length ? (
+                  <Typography color="text.secondary" variant="body2">
+                    Реквизиты настроены: {processing.bankDetails[0].value}
+                  </Typography>
+                ) : null}
               </Stack>
               <Stack alignItems={{ xs: 'flex-start', md: 'flex-end' }} spacing={0.6}>
                 <Chip
@@ -134,7 +140,9 @@ export const OwnerProcessingsPage = () => {
                   label={processing.status}
                 />
                 <Typography color="text.secondary" variant="body2">
-                  {processing.conditionLabel}
+                  {processing.confirmationMode === 'receipt_review'
+                    ? processing.reviewEtaLabel
+                    : processing.conditionLabel}
                 </Typography>
               </Stack>
             </Stack>

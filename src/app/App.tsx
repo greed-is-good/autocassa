@@ -7,8 +7,6 @@ import {
   CurrencyExchangeRounded,
   GroupsRounded,
   HandshakeRounded,
-  HistoryRounded,
-  HourglassTopRounded,
   MenuRounded,
   PersonOutlineRounded,
   ReceiptLongRounded,
@@ -40,8 +38,6 @@ import { OwnerProcessingsPage } from '../pages/owner/OwnerProcessingsPage'
 import { PartnerOverviewPage } from '../pages/partner/PartnerOverviewPage'
 import { PartnerReportsPage } from '../pages/partner/PartnerReportsPage'
 import { PartnerTariffsPage } from '../pages/partner/PartnerTariffsPage'
-import { PlayerHistoryPage } from '../pages/player/PlayerHistoryPage'
-import { PlayerStatusPage } from '../pages/player/PlayerStatusPage'
 import { PlayerTopUpPage } from '../pages/player/PlayerTopUpPage'
 import type { Role } from '../types'
 import { PrototypeProvider } from './PrototypeContext'
@@ -50,49 +46,37 @@ const navigationByRole = {
   player: {
     defaultPath: '/player/topup',
     title: 'Игрок',
-    subtitle: 'Пополнение, статус, история и чат.',
+    subtitle: 'Пополнение и статус операции',
     items: [
       {
         label: 'Пополнение',
         path: '/player/topup',
-        description: 'Форма пополнения.',
+        description: 'Форма пополнения и статус операции',
         icon: AddCardRounded,
-      },
-      {
-        label: 'Статус',
-        path: '/player/status',
-        description: 'Статус оплаты и зачисления.',
-        icon: HourglassTopRounded,
-      },
-      {
-        label: 'История',
-        path: '/player/history',
-        description: 'История операций.',
-        icon: HistoryRounded,
       },
     ],
   },
   partner: {
     defaultPath: '/partner/overview',
     title: 'Партнёр',
-    subtitle: 'Свои операции, тарифы и отчётность.',
+    subtitle: 'Свой контур операций, комиссии и отчётность',
     items: [
       {
         label: 'Обзор',
         path: '/partner/overview',
-        description: 'Сводка и платежи.',
+        description: 'Сводка и платежи',
         icon: SpaceDashboardRounded,
       },
       {
-        label: 'Тарифы',
+        label: 'Комиссии',
         path: '/partner/tariffs',
-        description: 'Курсы и ставки.',
+        description: 'Комиссии по процессингам',
         icon: TuneRounded,
       },
       {
         label: 'Отчётность',
         path: '/partner/reports',
-        description: 'Сверка и отчёты.',
+        description: 'Сверка и отчёты',
         icon: BarChartRounded,
       },
     ],
@@ -100,36 +84,36 @@ const navigationByRole = {
   owner: {
     defaultPath: '/owner/dashboard',
     title: 'Владелец',
-    subtitle: 'Платежи, клубы, процессинги и партнёры.',
+    subtitle: 'Платежи, клубы, процессинги и партнёры',
     items: [
       {
         label: 'Дашборд',
         path: '/owner/dashboard',
-        description: 'Метрики и алерты.',
+        description: 'Операционная сводка',
         icon: SpaceDashboardRounded,
       },
       {
         label: 'Платежи',
         path: '/owner/payments',
-        description: 'Операции и исключения.',
+        description: 'Журнал операций и исключения',
         icon: ReceiptLongRounded,
       },
       {
         label: 'Клубы',
         path: '/owner/clubs',
-        description: 'Статусы интеграций.',
+        description: 'Клубы, интеграции и цена фишки',
         icon: ApartmentRounded,
       },
       {
         label: 'Процессинги',
         path: '/owner/processings',
-        description: 'Валюты и маршруты.',
+        description: 'Валюты и режимы подтверждения',
         icon: CurrencyExchangeRounded,
       },
       {
         label: 'Партнёры',
         path: '/owner/partners',
-        description: 'Партнёры и тарифы.',
+        description: 'Партнёры и комиссии',
         icon: GroupsRounded,
       },
     ],
@@ -360,8 +344,8 @@ export const App = () => (
           <Route element={<Navigate replace to="/player/topup" />} index />
 
           <Route element={<PlayerTopUpPage />} path="/player/topup" />
-          <Route element={<PlayerStatusPage />} path="/player/status" />
-          <Route element={<PlayerHistoryPage />} path="/player/history" />
+          <Route element={<Navigate replace to="/player/topup" />} path="/player/status" />
+          <Route element={<Navigate replace to="/player/topup" />} path="/player/history" />
 
           <Route element={<PartnerOverviewPage />} path="/partner/overview" />
           <Route element={<PartnerTariffsPage />} path="/partner/tariffs" />

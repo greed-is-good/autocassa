@@ -19,6 +19,7 @@ import {
 
 import {
   formatAmount,
+  formatChipAmount,
   getClubById,
   getPartnerById,
   getProcessingById,
@@ -109,15 +110,22 @@ export const OperationsTable = ({
                     {formatAmount(operation.amount, operation.currency)} {operation.currency}
                   </Typography>
                   <Typography color="text.secondary" variant="body2">
-                    Ссылка {operation.linkExpiresIn}
+                    {formatChipAmount(operation.chipAmount)} фишек
                   </Typography>
+                  {operation.receiptAttachment ? (
+                    <Typography color="text.secondary" variant="caption">
+                      Чек прикреплён
+                    </Typography>
+                  ) : null}
                 </Stack>
               </TableCell>
               <TableCell>
                 <Stack spacing={0.25}>
                   <Typography fontWeight={700}>{processing.title}</Typography>
                   <Typography color="text.secondary" variant="body2">
-                    {processing.code}
+                    {processing.confirmationMode === 'receipt_review'
+                      ? 'PDF-чек'
+                      : processing.code}
                   </Typography>
                 </Stack>
               </TableCell>

@@ -24,6 +24,8 @@ export type PaymentScenario =
   | 'awaiting'
   | 'expired'
   | 'payment_error'
+  | 'receipt_upload'
+  | 'receipt_review'
   | 'processing'
   | 'credit_error'
   | 'manual'
@@ -31,16 +33,31 @@ export type PaymentScenario =
 
 export type DetailTab = 'summary' | 'history'
 
+export type ConfirmationMode = 'auto' | 'receipt_review'
+
+export type ReceiptStatus =
+  | 'not_required'
+  | 'awaiting_upload'
+  | 'uploaded'
+  | 'under_review'
+  | 'approved'
+
 export interface Club {
   id: string
   title: string
   appName: string
+  iconKey: string
   clubNumber: string
   apiStatus: 'API подключено' | 'Вне MVP'
   endpoint: string
   lastCheckStatus: 'Успешно' | 'С предупреждением' | 'Ошибка'
   lastCheckAt: string
   lastCheckNote: string
+}
+
+export interface BankDetailLine {
+  label: string
+  value: string
 }
 
 export interface Processing {
@@ -53,6 +70,10 @@ export interface Processing {
   settlementNote: string
   conditionLabel: string
   providerNote: string
+  confirmationMode: ConfirmationMode
+  requiresReceiptUpload: boolean
+  reviewEtaLabel?: string
+  bankDetails?: BankDetailLine[]
 }
 
 export interface CurrencyBinding {
@@ -61,6 +82,7 @@ export interface CurrencyBinding {
   rateLabel: string
   payoutWindow: string
   systemNote: string
+  ownerEnabled: boolean
 }
 
 export interface Partner {
@@ -75,18 +97,27 @@ export interface Partner {
   commissionNote: string
 }
 
-export interface TariffRate {
+export interface ChipPriceRule {
+  id: string
+  clubId: string
+  currency: Currency
+  pricePerChip: number
+  updatedAt: string
+  updatedBy: string
+}
+
+export interface PartnerProcessingCommission {
   id: string
   partnerId: string
   currency: Currency
   processingId: string
-  fixedRate: string
+  commissionRate: string
   settlementWindow: string
   updatedAt: string
   updatedBy: string
 }
 
-export interface TariffLogItem {
+export interface CommissionLogItem {
   id: string
   partnerId: string
   changedAt: string
@@ -100,6 +131,21 @@ export interface TimelineItem {
   state: TimelineState
 }
 
+export interface ReceiptAttachment {
+  id: string
+  name: string
+  size: string
+  uploadedAt: string
+  reviewNote?: string
+}
+
+export interface OperationLogItem {
+  id: string
+  time: string
+  title: string
+  description: string
+}
+
 export interface Operation {
   id: string
   createdAt: string
@@ -108,8 +154,10 @@ export interface Operation {
   clubNumber: string
   accountId: string
   amount: number
+  chipAmount: number
   currency: Currency
   processingId: string
+  confirmationMode: ConfirmationMode
   paymentStatus: PaymentStatus
   creditStatus: CreditStatus
   chatStatus: ChatStatus
@@ -118,6 +166,12 @@ export interface Operation {
   issueNote?: string
   apiRequestId?: string
   timeline: TimelineItem[]
+  receiptRequired: boolean
+  receiptStatus: ReceiptStatus
+  receiptAttachment?: ReceiptAttachment
+  receiptReviewedAt?: string
+  processingReviewEta?: string
+  logs: OperationLogItem[]
 }
 
 export interface ChatAttachment {
@@ -141,6 +195,8 @@ export interface PlayerDraft {
   accountId: string
   amount: string
   currency: Currency
+  acceptResponsibility: boolean
+  acceptTerms: boolean
 }
 
 export interface DashboardAlert {
@@ -167,13 +223,33 @@ export interface OwnerQuickLink {
   counter: string
 }
 
+export interface CurrencyAvailability {
+  currency: Currency
+  binding: CurrencyBinding
+  enabled: boolean
+  reason?: string
+}
+
 export type DemoModalState =
   | { type: 'none' }
   | { type: 'createPartner' }
-  | { type: 'editRate'; rateId: string }
+  | { type: 'editCommission'; commissionId: string }
   | { type: 'accrualError'; operationId: string }
   | { type: 'manualAdjustment'; operationId: string }
   | { type: 'retryAccrual'; operationId: string }
   | { type: 'paymentExpired'; operationId: string }
   | { type: 'paymentSuccess'; operationId: string }
   | { type: 'editBinding'; currency: Currency }
+
+export interface PrototypeSessionState {
+  playerDraft: PlayerDraft
+  statusScenario: PaymentScenario
+  playerOperationCreated: boolean
+  playerPromoDismissed: boolean
+  playerReceiptAttachment?: ReceiptAttachment
+  selectedOperationId: string
+  detailTab: DetailTab
+  modalState: DemoModalState
+  chatOpen: boolean
+  chatMessages: Record<string, ChatMessage[]>
+}

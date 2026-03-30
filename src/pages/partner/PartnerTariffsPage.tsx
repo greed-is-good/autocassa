@@ -16,19 +16,21 @@ import {
 import { MetricCard } from '../../components/MetricCard'
 import { SectionCard } from '../../components/SectionCard'
 import {
+  commissionLog,
   getProcessingById,
+  partnerProcessingCommissions,
   partners,
-  tariffLog,
-  tariffRates,
 } from '../../data/mockData'
 
 const partner = partners[0]
-const partnerRates = tariffRates.filter((rate) => rate.partnerId === partner.id)
+const partnerCommissions = partnerProcessingCommissions.filter(
+  (commission) => commission.partnerId === partner.id,
+)
 
 export const PartnerTariffsPage = () => (
   <Stack className="autocassa-fade-up" spacing={3}>
     <Alert icon={<LockRounded />} severity="warning" sx={{ borderRadius: '20px' }}>
-      Тарифы доступны только для просмотра
+      Партнёр видит только свой контур и не редактирует системные настройки
     </Alert>
 
     <Grid container spacing={2.2}>
@@ -36,17 +38,17 @@ export const PartnerTariffsPage = () => (
         <MetricCard
           hint="Активные ставки"
           icon={<PaymentsRounded />}
-          label="Тарифных связок"
-          value={partnerRates.length.toString()}
+          label="Комиссионных связок"
+          value={partnerCommissions.length.toString()}
         />
       </Grid>
       <Grid size={{ xs: 12, md: 4 }}>
         <MetricCard
           hint="Среднее значение"
           icon={<PaymentsRounded />}
-          label="Средний фиксированный курс"
+          label="Средняя комиссия"
           tone="success"
-          value="97.6%"
+          value="2.5%"
         />
       </Grid>
       <Grid size={{ xs: 12, md: 4 }}>
@@ -62,8 +64,8 @@ export const PartnerTariffsPage = () => (
 
     <SectionCard
       eyebrow="Партнёр"
-      title="Тарифы по связке валюта + процессинг"
-      subtitle="Фиксированные ставки партнёра"
+      title="Комиссии по связке валюта + процессинг"
+      subtitle="Доступно только для просмотра"
       action={<Chip label={partner.commissionNote} />}
     >
       <TableContainer>
@@ -72,22 +74,22 @@ export const PartnerTariffsPage = () => (
             <TableRow>
               <TableCell>Валюта</TableCell>
               <TableCell>Процессинг</TableCell>
-              <TableCell>Фиксированный курс</TableCell>
+              <TableCell>Комиссия</TableCell>
               <TableCell>Окно расчёта</TableCell>
               <TableCell>Обновлено</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {partnerRates.map((rate) => (
-              <TableRow key={rate.id}>
+            {partnerCommissions.map((commission) => (
+              <TableRow key={commission.id}>
                 <TableCell>
-                  <Typography fontWeight={800}>{rate.currency}</Typography>
+                  <Typography fontWeight={800}>{commission.currency}</Typography>
                 </TableCell>
-                <TableCell>{getProcessingById(rate.processingId).title}</TableCell>
-                <TableCell>{rate.fixedRate}</TableCell>
-                <TableCell>{rate.settlementWindow}</TableCell>
+                <TableCell>{getProcessingById(commission.processingId).title}</TableCell>
+                <TableCell>{commission.commissionRate}</TableCell>
+                <TableCell>{commission.settlementWindow}</TableCell>
                 <TableCell>
-                  {rate.updatedAt} • {rate.updatedBy}
+                  {commission.updatedAt} • {commission.updatedBy}
                 </TableCell>
               </TableRow>
             ))}
@@ -96,8 +98,8 @@ export const PartnerTariffsPage = () => (
       </TableContainer>
 
       <Stack mt={2.5} spacing={1.2}>
-        <Typography fontWeight={800}>Последние изменения тарифов</Typography>
-        {tariffLog
+        <Typography fontWeight={800}>Последние изменения</Typography>
+        {commissionLog
           .filter((item) => item.partnerId === partner.id)
           .map((item) => (
             <Stack

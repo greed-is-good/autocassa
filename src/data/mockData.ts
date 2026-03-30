@@ -1,20 +1,22 @@
 import type {
   ChatMessage,
+  ChipPriceRule,
   Club,
+  CommissionLogItem,
   CreditStatus,
   Currency,
+  CurrencyAvailability,
   CurrencyBinding,
-  DashboardAlert,
   Operation,
   OwnerQuickLink,
   Partner,
+  PartnerProcessingCommission,
   PartnerReportRow,
   PaymentScenario,
   PaymentStatus,
   PlayerDraft,
   Processing,
-  TariffLogItem,
-  TariffRate,
+  ReceiptStatus,
   TimelineItem,
 } from '../types'
 
@@ -31,6 +33,8 @@ type TimelineScenario =
   | 'awaiting'
   | 'expired'
   | 'payment_error'
+  | 'receipt_upload'
+  | 'receipt_review'
   | 'processing'
   | 'credit_error'
   | 'manual'
@@ -45,6 +49,8 @@ const makeTimeline = (
     awaiting: ['done', 'active', 'pending', 'pending', 'pending'],
     expired: ['done', 'error', 'pending', 'pending', 'pending'],
     payment_error: ['done', 'error', 'pending', 'pending', 'pending'],
+    receipt_upload: ['done', 'active', 'pending', 'pending', 'pending'],
+    receipt_review: ['done', 'active', 'pending', 'pending', 'pending'],
     processing: ['done', 'done', 'done', 'active', 'pending'],
     credit_error: ['done', 'done', 'done', 'error', 'pending'],
     manual: ['done', 'done', 'done', 'error', 'pending'],
@@ -63,45 +69,49 @@ export const clubs: Club[] = [
     id: 'club-royal',
     title: 'PP Poker',
     appName: 'PP Poker',
+    iconKey: 'PP',
     clubNumber: 'PP-104',
     apiStatus: 'API подключено',
     endpoint: 'https://api.pppoker.app/partner/balance/topup',
     lastCheckStatus: 'Успешно',
-    lastCheckAt: '25.03.2026, 18:42',
-    lastCheckNote: 'Ответ API за 420 мс, ошибок нет',
+    lastCheckAt: '27.03.2026, 18:42',
+    lastCheckNote: 'Ответ API за 420 мс',
   },
   {
     id: 'club-volna',
     title: 'X-poker',
     appName: 'X-poker',
+    iconKey: 'XP',
     clubNumber: 'XP-208',
     apiStatus: 'API подключено',
     endpoint: 'https://gateway.x-poker.io/api/v1/deposit',
     lastCheckStatus: 'Успешно',
-    lastCheckAt: '25.03.2026, 18:37',
-    lastCheckNote: 'Подтверждение подписи проходит штатно',
+    lastCheckAt: '27.03.2026, 18:37',
+    lastCheckNote: 'Подпись webhook подтверждается штатно',
   },
   {
     id: 'club-summit',
     title: 'Suprema Poker',
     appName: 'Suprema Poker',
+    iconKey: 'SP',
     clubNumber: 'SP-331',
     apiStatus: 'API подключено',
     endpoint: 'https://api.supremapoker.com/club/balance/credit',
     lastCheckStatus: 'С предупреждением',
-    lastCheckAt: '25.03.2026, 18:35',
-    lastCheckNote: 'Пиковая задержка до 1.8 сек, зачисления не блокируются',
+    lastCheckAt: '27.03.2026, 18:35',
+    lastCheckNote: 'Пиковая задержка до 1.8 сек',
   },
   {
     id: 'club-lucky',
     title: 'pokerok',
     appName: 'pokerok',
+    iconKey: 'PO',
     clubNumber: 'PO-502',
     apiStatus: 'Вне MVP',
     endpoint: 'API не подключено',
     lastCheckStatus: 'Ошибка',
-    lastCheckAt: '25.03.2026, 17:55',
-    lastCheckNote: 'Приложение ждёт интеграцию',
+    lastCheckAt: '27.03.2026, 17:55',
+    lastCheckNote: 'Клуб ожидает отдельную интеграцию',
   },
 ]
 
@@ -114,8 +124,10 @@ export const processings: Processing[] = [
     status: 'Активен',
     priority: 1,
     settlementNote: 'Ссылка живёт 15 минут, подтверждение 1-2 минуты',
-    conditionLabel: 'Комиссия 3.2%, автоподтверждение вебхуком',
-    providerNote: 'Основной RUB-процессинг',
+    conditionLabel: 'Автоподтверждение по webhook',
+    providerNote: 'Основной RUB-маршрут',
+    confirmationMode: 'auto',
+    requiresReceiptUpload: false,
   },
   {
     id: 'proc-kaspiflow',
@@ -124,9 +136,18 @@ export const processings: Processing[] = [
     currencies: ['KZT'],
     status: 'Активен',
     priority: 1,
-    settlementNote: 'Ссылка живёт 20 минут, подтверждение до 90 секунд',
-    conditionLabel: 'Фиксированный курс, payout T+0',
-    providerNote: 'Основной KZT-процессинг',
+    settlementNote: 'Оплата по реквизитам, сверка PDF-чека до 7 минут',
+    conditionLabel: 'Ручное подтверждение по PDF-чеку',
+    providerNote: 'KZT-маршрут с проверкой чека',
+    confirmationMode: 'receipt_review',
+    requiresReceiptUpload: true,
+    reviewEtaLabel: 'Сверка чека до 7 минут',
+    bankDetails: [
+      { label: 'Получатель', value: 'TOO KaspiFlow Merchant' },
+      { label: 'Банк', value: 'Kaspi Bank' },
+      { label: 'Номер карты', value: '4400 4301 2200 1848' },
+      { label: 'Комментарий', value: 'Укажите номер операции в назначении' },
+    ],
   },
   {
     id: 'proc-tetherdesk',
@@ -135,9 +156,11 @@ export const processings: Processing[] = [
     currencies: ['USDT'],
     status: 'На мониторинге',
     priority: 1,
-    settlementNote: 'Подтверждение после 1 сетевого подтверждения',
-    conditionLabel: 'USDT TRC20, окно подтверждения до 7 минут',
-    providerNote: 'Основной USDT-процессинг',
+    settlementNote: 'Подтверждение после 1 сетевого блока',
+    conditionLabel: 'TRC20, окно подтверждения до 7 минут',
+    providerNote: 'Основной USDT-маршрут',
+    confirmationMode: 'auto',
+    requiresReceiptUpload: false,
   },
   {
     id: 'proc-backup',
@@ -147,8 +170,10 @@ export const processings: Processing[] = [
     status: 'Резерв',
     priority: 2,
     settlementNote: 'Резервный маршрут следующего спринта',
-    conditionLabel: 'Недоступен игроку напрямую',
+    conditionLabel: 'Не доступен игроку напрямую',
     providerNote: 'Резервный маршрут',
+    confirmationMode: 'auto',
+    requiresReceiptUpload: false,
   },
 ]
 
@@ -157,22 +182,84 @@ export const currencyBindings: CurrencyBinding[] = [
     currency: 'RUB',
     processingId: 'proc-riverpay',
     rateLabel: '1 RUB = 1 RUB',
-    payoutWindow: 'Автоподтверждение, до 2 минут',
+    payoutWindow: 'Подтверждение до 2 минут',
     systemNote: 'Маршрут назначается автоматически',
+    ownerEnabled: true,
   },
   {
     currency: 'KZT',
     processingId: 'proc-kaspiflow',
     rateLabel: '1 KZT = 1 KZT',
-    payoutWindow: 'Подтверждение до 90 секунд',
-    systemNote: 'Маршрут назначается автоматически',
+    payoutWindow: 'Проверка чека до 7 минут',
+    systemNote: 'После оплаты нужен PDF-чек',
+    ownerEnabled: true,
   },
   {
     currency: 'USDT',
     processingId: 'proc-tetherdesk',
     rateLabel: '1 USDT = 1 USDT',
-    payoutWindow: '1 подтверждение сети, обычно до 7 минут',
+    payoutWindow: '1 подтверждение сети',
     systemNote: 'Маршрут назначается автоматически',
+    ownerEnabled: true,
+  },
+]
+
+export const chipPriceRules: ChipPriceRule[] = [
+  {
+    id: 'chip-royal-rub',
+    clubId: 'club-royal',
+    currency: 'RUB',
+    pricePerChip: 0.1,
+    updatedAt: '27.03.2026, 17:10',
+    updatedBy: 'Екатерина Петрова',
+  },
+  {
+    id: 'chip-royal-kzt',
+    clubId: 'club-royal',
+    currency: 'KZT',
+    pricePerChip: 0.55,
+    updatedAt: '27.03.2026, 17:10',
+    updatedBy: 'Екатерина Петрова',
+  },
+  {
+    id: 'chip-royal-usdt',
+    clubId: 'club-royal',
+    currency: 'USDT',
+    pricePerChip: 0.001,
+    updatedAt: '27.03.2026, 17:10',
+    updatedBy: 'Екатерина Петрова',
+  },
+  {
+    id: 'chip-volna-rub',
+    clubId: 'club-volna',
+    currency: 'RUB',
+    pricePerChip: 0.12,
+    updatedAt: '27.03.2026, 17:15',
+    updatedBy: 'Екатерина Петрова',
+  },
+  {
+    id: 'chip-volna-kzt',
+    clubId: 'club-volna',
+    currency: 'KZT',
+    pricePerChip: 0.6,
+    updatedAt: '27.03.2026, 17:15',
+    updatedBy: 'Екатерина Петрова',
+  },
+  {
+    id: 'chip-summit-rub',
+    clubId: 'club-summit',
+    currency: 'RUB',
+    pricePerChip: 0.11,
+    updatedAt: '27.03.2026, 17:21',
+    updatedBy: 'Денис Самойлов',
+  },
+  {
+    id: 'chip-summit-usdt',
+    clubId: 'club-summit',
+    currency: 'USDT',
+    pricePerChip: 0.0011,
+    updatedAt: '27.03.2026, 17:21',
+    updatedBy: 'Денис Самойлов',
   },
 ]
 
@@ -185,8 +272,8 @@ export const partners: Partner[] = [
     allowedClubIds: ['club-royal', 'club-volna'],
     allowedCurrencies: ['RUB', 'KZT', 'USDT'],
     allowedProcessingIds: ['proc-riverpay', 'proc-kaspiflow', 'proc-tetherdesk'],
-    monthlyPlan: 'До 1 500 операций / месяц',
-    commissionNote: 'Фиксированные курсы по связке валюта + процессинг',
+    monthlyPlan: 'До 1 500 операций в месяц',
+    commissionNote: 'Комиссия задаётся по связке валюта + процессинг',
   },
   {
     id: 'partner-vector',
@@ -196,8 +283,8 @@ export const partners: Partner[] = [
     allowedClubIds: ['club-summit'],
     allowedCurrencies: ['RUB', 'USDT'],
     allowedProcessingIds: ['proc-riverpay', 'proc-tetherdesk'],
-    monthlyPlan: 'До 900 операций / месяц',
-    commissionNote: 'Повышенный тариф по USDT',
+    monthlyPlan: 'До 900 операций в месяц',
+    commissionNote: 'USDT с повышенной маржой',
   },
   {
     id: 'partner-pulse',
@@ -207,77 +294,117 @@ export const partners: Partner[] = [
     allowedClubIds: ['club-volna', 'club-summit'],
     allowedCurrencies: ['KZT', 'USDT'],
     allowedProcessingIds: ['proc-kaspiflow', 'proc-tetherdesk'],
-    monthlyPlan: 'До 700 операций / месяц',
-    commissionNote: 'Отчётность и сверка раз в сутки',
+    monthlyPlan: 'До 700 операций в месяц',
+    commissionNote: 'Ежедневная сверка по закрытию дня',
   },
 ]
 
-export const tariffRates: TariffRate[] = [
+export const partnerProcessingCommissions: PartnerProcessingCommission[] = [
   {
-    id: 'rate-orbit-rub',
+    id: 'commission-orbit-rub',
     partnerId: 'partner-orbit',
     currency: 'RUB',
     processingId: 'proc-riverpay',
-    fixedRate: '96.8%',
+    commissionRate: '3.2%',
     settlementWindow: 'T+0',
-    updatedAt: '24.03.2026, 14:05',
+    updatedAt: '26.03.2026, 14:05',
     updatedBy: 'Екатерина Петрова',
   },
   {
-    id: 'rate-orbit-kzt',
+    id: 'commission-orbit-kzt',
     partnerId: 'partner-orbit',
     currency: 'KZT',
     processingId: 'proc-kaspiflow',
-    fixedRate: '97.4%',
+    commissionRate: '2.8%',
     settlementWindow: 'T+0',
-    updatedAt: '24.03.2026, 14:07',
+    updatedAt: '26.03.2026, 14:08',
     updatedBy: 'Екатерина Петрова',
   },
   {
-    id: 'rate-orbit-usdt',
+    id: 'commission-orbit-usdt',
     partnerId: 'partner-orbit',
     currency: 'USDT',
     processingId: 'proc-tetherdesk',
-    fixedRate: '98.6%',
+    commissionRate: '1.4%',
     settlementWindow: 'T+1',
-    updatedAt: '24.03.2026, 14:12',
+    updatedAt: '26.03.2026, 14:12',
     updatedBy: 'Екатерина Петрова',
   },
   {
-    id: 'rate-vector-usdt',
+    id: 'commission-vector-rub',
+    partnerId: 'partner-vector',
+    currency: 'RUB',
+    processingId: 'proc-riverpay',
+    commissionRate: '3.6%',
+    settlementWindow: 'T+0',
+    updatedAt: '25.03.2026, 19:10',
+    updatedBy: 'Денис Самойлов',
+  },
+  {
+    id: 'commission-vector-usdt',
     partnerId: 'partner-vector',
     currency: 'USDT',
     processingId: 'proc-tetherdesk',
-    fixedRate: '99.1%',
+    commissionRate: '1.1%',
     settlementWindow: 'T+1',
-    updatedAt: '23.03.2026, 19:48',
+    updatedAt: '25.03.2026, 19:12',
     updatedBy: 'Денис Самойлов',
+  },
+  {
+    id: 'commission-pulse-kzt',
+    partnerId: 'partner-pulse',
+    currency: 'KZT',
+    processingId: 'proc-kaspiflow',
+    commissionRate: '3.1%',
+    settlementWindow: 'T+0',
+    updatedAt: '25.03.2026, 12:30',
+    updatedBy: 'Екатерина Петрова',
+  },
+  {
+    id: 'commission-pulse-usdt',
+    partnerId: 'partner-pulse',
+    currency: 'USDT',
+    processingId: 'proc-tetherdesk',
+    commissionRate: '1.8%',
+    settlementWindow: 'T+1',
+    updatedAt: '25.03.2026, 12:32',
+    updatedBy: 'Екатерина Петрова',
   },
 ]
 
-export const tariffLog: TariffLogItem[] = [
+export const commissionLog: CommissionLogItem[] = [
   {
-    id: 'log-1',
+    id: 'commission-log-1',
     partnerId: 'partner-orbit',
-    changedAt: '24.03.2026, 14:12',
+    changedAt: '26.03.2026, 14:12',
     changedBy: 'Екатерина Петрова',
-    summary: 'USDT / Tether Desk изменён с 98.3% на 98.6%',
+    summary: 'USDT / Tether Desk изменён с 1.2% на 1.4%',
   },
   {
-    id: 'log-2',
+    id: 'commission-log-2',
     partnerId: 'partner-orbit',
-    changedAt: '22.03.2026, 11:30',
-    changedBy: 'Денис Самойлов',
-    summary: 'Для KZT продлено окно расчёта до T+0',
+    changedAt: '26.03.2026, 14:08',
+    changedBy: 'Екатерина Петрова',
+    summary: 'KZT / KaspiFlow переведён на T+0',
   },
   {
-    id: 'log-3',
+    id: 'commission-log-3',
     partnerId: 'partner-vector',
-    changedAt: '23.03.2026, 19:48',
-    changedBy: 'Екатерина Петрова',
-    summary: 'Создан тариф USDT / Tether Desk',
+    changedAt: '25.03.2026, 19:12',
+    changedBy: 'Денис Самойлов',
+    summary: 'Создана комиссия USDT / Tether Desk',
   },
 ]
+
+const buildLogs = (
+  id: string,
+  entries: Array<[string, string, string]>,
+) => entries.map(([time, title, description], index) => ({
+  id: `${id}-log-${index + 1}`,
+  time,
+  title,
+  description,
+}))
 
 export const operations: Operation[] = [
   {
@@ -288,8 +415,10 @@ export const operations: Operation[] = [
     clubNumber: 'PP-104',
     accountId: 'PP-882114',
     amount: 12500,
+    chipAmount: 125000,
     currency: 'RUB',
     processingId: 'proc-riverpay',
+    confirmationMode: 'auto',
     paymentStatus: 'Оплачен',
     creditStatus: 'Зачислено',
     chatStatus: 'Есть ответ администратора',
@@ -303,6 +432,14 @@ export const operations: Operation[] = [
       '18:46',
       '18:47',
     ]),
+    receiptRequired: false,
+    receiptStatus: 'not_required',
+    logs: buildLogs('AC-240325-1042', [
+      ['18:42', 'Операция создана', 'Игрок получил ссылку на оплату'],
+      ['18:45', 'Платёж подтверждён', 'RiverPay прислал webhook об оплате'],
+      ['18:46', 'Отправлено в клуб', 'Баланс передан в PP Poker'],
+      ['18:47', 'Зачислено', 'Клуб подтвердил изменение баланса'],
+    ]),
   },
   {
     id: 'AC-240325-1038',
@@ -312,20 +449,40 @@ export const operations: Operation[] = [
     clubNumber: 'XP-208',
     accountId: 'XP-551080',
     amount: 75000,
+    chipAmount: 125000,
     currency: 'KZT',
     processingId: 'proc-kaspiflow',
+    confirmationMode: 'receipt_review',
     paymentStatus: 'Оплачен',
-    creditStatus: 'Отправлено в клуб',
+    creditStatus: 'Зачислено',
     chatStatus: 'Открыт',
     linkExpiresIn: '09:14',
     paymentLink: 'https://pay.autocassa.demo/AC-240325-1038',
     apiRequestId: 'xp-req-118034',
-    timeline: makeTimeline('processing', [
+    timeline: makeTimeline('success', [
       '18:21',
-      '18:21',
+      '18:22',
       '18:24',
       '18:25',
-      'в обработке',
+      '18:26',
+    ]),
+    receiptRequired: true,
+    receiptStatus: 'approved',
+    receiptAttachment: {
+      id: 'receipt-1038',
+      name: 'kaspiflow-AC-240325-1038.pdf',
+      size: '412 KB',
+      uploadedAt: '25.03.2026, 18:22',
+      reviewNote: 'Сумма и номер операции совпали',
+    },
+    receiptReviewedAt: '25.03.2026, 18:24',
+    processingReviewEta: 'Сверка до 7 минут',
+    logs: buildLogs('AC-240325-1038', [
+      ['18:21', 'Операция создана', 'Показаны реквизиты KaspiFlow'],
+      ['18:22', 'Чек загружен', 'Игрок прикрепил PDF-чек после оплаты'],
+      ['18:24', 'Чек подтверждён', 'KaspiFlow принял платёж после сверки'],
+      ['18:25', 'Отправлено в клуб', 'Баланс передан в X-poker'],
+      ['18:26', 'Зачислено', 'Клуб подтвердил пополнение'],
     ]),
   },
   {
@@ -336,14 +493,16 @@ export const operations: Operation[] = [
     clubNumber: 'SP-331',
     accountId: 'SP-219450',
     amount: 180,
+    chipAmount: 163636.36,
     currency: 'USDT',
     processingId: 'proc-tetherdesk',
+    confirmationMode: 'auto',
     paymentStatus: 'Оплачен',
     creditStatus: 'Ошибка зачисления',
     chatStatus: 'Есть ответ администратора',
     linkExpiresIn: '03:42',
     paymentLink: 'https://pay.autocassa.demo/AC-240325-1031',
-    issueNote: 'API приложения вернул код 422: аккаунт временно заблокирован',
+    issueNote: 'API клуба вернул код 422: аккаунт временно заблокирован',
     apiRequestId: 'sp-req-542201',
     timeline: makeTimeline('credit_error', [
       '17:58',
@@ -351,6 +510,13 @@ export const operations: Operation[] = [
       '18:03',
       '18:04',
       'ошибка API',
+    ]),
+    receiptRequired: false,
+    receiptStatus: 'not_required',
+    logs: buildLogs('AC-240325-1031', [
+      ['17:58', 'Операция создана', 'Игрок получил ссылку на оплату'],
+      ['18:03', 'Платёж подтверждён', 'Tether Desk прислал подтверждение сети'],
+      ['18:04', 'Ошибка зачисления', 'Suprema Poker не принял callback'],
     ]),
   },
   {
@@ -361,8 +527,10 @@ export const operations: Operation[] = [
     clubNumber: 'XP-208',
     accountId: 'XP-110944',
     amount: 9200,
+    chipAmount: 76666.67,
     currency: 'RUB',
     processingId: 'proc-riverpay',
+    confirmationMode: 'auto',
     paymentStatus: 'Истёк',
     creditStatus: 'Не отправлено',
     chatStatus: 'Закрыт',
@@ -376,6 +544,12 @@ export const operations: Operation[] = [
       'не отправлено',
       'не зачислено',
     ]),
+    receiptRequired: false,
+    receiptStatus: 'not_required',
+    logs: buildLogs('AC-240325-1025', [
+      ['17:24', 'Операция создана', 'Ссылка на оплату отправлена игроку'],
+      ['17:39', 'Ссылка истекла', 'Платёж не был завершён'],
+    ]),
   },
   {
     id: 'AC-240325-1019',
@@ -385,14 +559,16 @@ export const operations: Operation[] = [
     clubNumber: 'PP-104',
     accountId: 'PP-900321',
     amount: 30000,
+    chipAmount: 300000,
     currency: 'RUB',
     processingId: 'proc-riverpay',
+    confirmationMode: 'auto',
     paymentStatus: 'Оплачен',
     creditStatus: 'Требует ручной обработки',
     chatStatus: 'Открыт',
     linkExpiresIn: '00:00',
     paymentLink: 'https://pay.autocassa.demo/AC-240325-1019',
-    issueNote: 'Приложение не подтвердило итоговый callback после успешного API-запроса',
+    issueNote: 'Клуб не подтвердил итоговый callback после успешного API-запроса',
     apiRequestId: 'pp-req-778190',
     timeline: makeTimeline('manual', [
       '16:58',
@@ -400,6 +576,13 @@ export const operations: Operation[] = [
       '17:02',
       '17:03',
       'ручная проверка',
+    ]),
+    receiptRequired: false,
+    receiptStatus: 'not_required',
+    logs: buildLogs('AC-240325-1019', [
+      ['16:58', 'Операция создана', 'Игрок получил ссылку на оплату'],
+      ['17:02', 'Платёж подтверждён', 'RiverPay прислал webhook'],
+      ['17:03', 'Передано в ручную обработку', 'Требуется проверка callback клуба'],
     ]),
   },
   {
@@ -410,8 +593,10 @@ export const operations: Operation[] = [
     clubNumber: 'SP-331',
     accountId: 'SP-400122',
     amount: 85,
+    chipAmount: 77272.73,
     currency: 'USDT',
     processingId: 'proc-tetherdesk',
+    confirmationMode: 'auto',
     paymentStatus: 'Ожидает оплаты',
     creditStatus: 'Не отправлено',
     chatStatus: 'Открыт',
@@ -424,6 +609,9 @@ export const operations: Operation[] = [
       'не отправлено',
       'не зачислено',
     ]),
+    receiptRequired: false,
+    receiptStatus: 'not_required',
+    logs: buildLogs('AC-240324-9987', [['22:17', 'Операция создана', 'Игрок получил ссылку на оплату']]),
   },
   {
     id: 'AC-240324-9981',
@@ -433,8 +621,10 @@ export const operations: Operation[] = [
     clubNumber: 'XP-208',
     accountId: 'XP-500771',
     amount: 44000,
+    chipAmount: 73333.33,
     currency: 'KZT',
     processingId: 'proc-kaspiflow',
+    confirmationMode: 'receipt_review',
     paymentStatus: 'Отменён',
     creditStatus: 'Не отправлено',
     chatStatus: 'Закрыт',
@@ -448,6 +638,20 @@ export const operations: Operation[] = [
       'не отправлено',
       'не зачислено',
     ]),
+    receiptRequired: true,
+    receiptStatus: 'uploaded',
+    receiptAttachment: {
+      id: 'receipt-9981',
+      name: 'kaspi-AC-240324-9981.pdf',
+      size: '288 KB',
+      uploadedAt: '24.03.2026, 21:43',
+    },
+    processingReviewEta: 'Сверка до 7 минут',
+    logs: buildLogs('AC-240324-9981', [
+      ['21:42', 'Операция создана', 'Показаны реквизиты KaspiFlow'],
+      ['21:43', 'Чек загружен', 'Игрок прикрепил PDF-чек'],
+      ['21:44', 'Платёж отклонён', 'Чек не прошёл сверку по сумме'],
+    ]),
   },
   {
     id: 'AC-240324-9970',
@@ -457,8 +661,10 @@ export const operations: Operation[] = [
     clubNumber: 'PP-104',
     accountId: 'PP-775632',
     amount: 5600,
+    chipAmount: 56000,
     currency: 'RUB',
     processingId: 'proc-riverpay',
+    confirmationMode: 'auto',
     paymentStatus: 'Создан',
     creditStatus: 'Не отправлено',
     chatStatus: 'Открыт',
@@ -471,6 +677,9 @@ export const operations: Operation[] = [
       'не отправлено',
       'не зачислено',
     ]),
+    receiptRequired: false,
+    receiptStatus: 'not_required',
+    logs: buildLogs('AC-240324-9970', [['20:58', 'Операция создана', 'Ссылка на оплату готова']]),
   },
 ]
 
@@ -480,6 +689,8 @@ export const playerDefaultDraft: PlayerDraft = {
   accountId: 'PP-882114',
   amount: '12500',
   currency: 'RUB',
+  acceptResponsibility: false,
+  acceptTerms: false,
 }
 
 export const playerScenarioMeta: Record<
@@ -487,6 +698,7 @@ export const playerScenarioMeta: Record<
   {
     paymentStatus: PaymentStatus
     creditStatus: CreditStatus
+    receiptStatus: ReceiptStatus
     title: string
     description: string
     actionLabel: string
@@ -496,6 +708,7 @@ export const playerScenarioMeta: Record<
   awaiting: {
     paymentStatus: 'Ожидает оплаты',
     creditStatus: 'Не отправлено',
+    receiptStatus: 'not_required',
     title: 'Ожидает оплату',
     description: 'Ссылка активна',
     actionLabel: 'Открыть оплату',
@@ -504,6 +717,7 @@ export const playerScenarioMeta: Record<
   expired: {
     paymentStatus: 'Истёк',
     creditStatus: 'Не отправлено',
+    receiptStatus: 'not_required',
     title: 'Ссылка истекла',
     description: 'Нужна новая ссылка',
     actionLabel: 'Создать новую ссылку',
@@ -512,96 +726,151 @@ export const playerScenarioMeta: Record<
   payment_error: {
     paymentStatus: 'Отменён',
     creditStatus: 'Не отправлено',
+    receiptStatus: 'not_required',
     title: 'Ошибка оплаты',
-    description: 'Платёж не подтверждён',
-    actionLabel: 'Проверить статус оплаты',
+    description: 'Провайдер не подтвердил платёж',
+    actionLabel: 'Проверить статус',
     highlight: 'error',
+  },
+  receipt_upload: {
+    paymentStatus: 'Создан',
+    creditStatus: 'Не отправлено',
+    receiptStatus: 'awaiting_upload',
+    title: 'Ожидает PDF-чек',
+    description: 'Оплатите по реквизитам и прикрепите чек',
+    actionLabel: 'Прикрепить чек',
+    highlight: 'warning',
+  },
+  receipt_review: {
+    paymentStatus: 'Ожидает оплаты',
+    creditStatus: 'Не отправлено',
+    receiptStatus: 'under_review',
+    title: 'Чек на сверке',
+    description: 'Процессинг проверяет PDF-чек',
+    actionLabel: 'Открыть поддержку',
+    highlight: 'info',
   },
   processing: {
     paymentStatus: 'Оплачен',
     creditStatus: 'Отправлено в клуб',
+    receiptStatus: 'approved',
     title: 'Отправлено в клуб',
-    description: 'Ожидается ответ API',
-    actionLabel: 'Открыть чек оплаты',
+    description: 'Ожидается ответ API клуба',
+    actionLabel: 'Проверить статус',
     highlight: 'info',
   },
   credit_error: {
     paymentStatus: 'Оплачен',
     creditStatus: 'Ошибка зачисления',
+    receiptStatus: 'approved',
     title: 'Ошибка зачисления',
-    description: 'Нужна повторная отправка или ручная обработка',
+    description: 'Нужна повторная отправка или ручная проверка',
     actionLabel: 'Связаться с администратором',
     highlight: 'error',
   },
   manual: {
     paymentStatus: 'Оплачен',
     creditStatus: 'Требует ручной обработки',
+    receiptStatus: 'approved',
     title: 'Ручная обработка',
     description: 'Операция передана оператору',
-    actionLabel: 'Открыть чат по операции',
+    actionLabel: 'Открыть чат',
     highlight: 'warning',
   },
   success: {
     paymentStatus: 'Оплачен',
     creditStatus: 'Зачислено',
-    title: 'Зачисление выполнено',
+    receiptStatus: 'approved',
+    title: 'Баланс зачислен',
     description: 'Операция завершена',
-    actionLabel: 'Открыть чек оплаты',
+    actionLabel: 'Открыть чек',
     highlight: 'success',
   },
 }
 
-export const ownerAlerts: DashboardAlert[] = [
-  {
-    id: 'owner-alert-1',
-    severity: 'error',
-    title: '3 операции с ошибкой зачисления',
-    description: 'Нужны повторная отправка или ручная обработка.',
-    meta: 'Последнее событие: 25.03.2026, 17:58',
-  },
-  {
-    id: 'owner-alert-2',
-    severity: 'warning',
-    title: '2 кейса ждут ручной обработки',
-    description: 'Нет финального подтверждения от клуба.',
-    meta: 'SLA оператора: до 15 минут',
-  },
-  {
-    id: 'owner-alert-3',
-    severity: 'info',
-    title: 'USDT процессинг на мониторинге',
-    description: 'Среднее подтверждение выросло до 5.4 минут.',
-    meta: 'Тренд за последние 2 часа',
-  },
-]
+export const playerScenarioTimelines: Record<PaymentScenario, TimelineItem[]> = {
+  awaiting: makeTimeline('awaiting', [
+    'сейчас',
+    'сейчас',
+    'ожидание',
+    'не отправлено',
+    'не зачислено',
+  ]),
+  expired: makeTimeline('expired', [
+    'сейчас',
+    '15:00',
+    'не получено',
+    'не отправлено',
+    'не зачислено',
+  ]),
+  payment_error: makeTimeline('payment_error', [
+    'сейчас',
+    'сейчас',
+    'отклонено',
+    'не отправлено',
+    'не зачислено',
+  ]),
+  receipt_upload: makeTimeline('receipt_upload', [
+    'сейчас',
+    'ожидает чек',
+    'не подтверждено',
+    'не отправлено',
+    'не зачислено',
+  ]),
+  receipt_review: makeTimeline('receipt_review', [
+    'сейчас',
+    'чек на сверке',
+    'ожидание',
+    'не отправлено',
+    'не зачислено',
+  ]),
+  processing: makeTimeline('processing', [
+    'сейчас',
+    'оплата подтверждена',
+    'получено',
+    'в обработке',
+    'ожидание',
+  ]),
+  credit_error: makeTimeline('credit_error', [
+    'сейчас',
+    'оплата подтверждена',
+    'получено',
+    'ошибка API',
+    'не зачислено',
+  ]),
+  manual: makeTimeline('manual', [
+    'сейчас',
+    'оплата подтверждена',
+    'получено',
+    'ручная проверка',
+    'не зачислено',
+  ]),
+  success: makeTimeline('success', [
+    'сейчас',
+    'оплата подтверждена',
+    'получено',
+    'отправлено',
+    'зачислено',
+  ]),
+}
 
-export const integrationAlerts: DashboardAlert[] = [
-  {
-    id: 'integration-1',
-    severity: 'warning',
-    title: 'Suprema Poker',
-    description: 'Ответ API вырос до 1.8 сек.',
-    meta: 'Последняя проверка: 25.03.2026, 18:35',
-  },
-  {
-    id: 'integration-2',
-    severity: 'error',
-    title: 'pokerok',
-    description: 'Клуб вне MVP.',
-    meta: 'Требуется отдельная интеграция',
-  },
-]
+export const playerScenarioIssueNotes: Partial<Record<PaymentScenario, string>> = {
+  expired: 'Ссылка на оплату истекла',
+  payment_error: 'Провайдер не подтвердил платёж',
+  credit_error: 'Клуб вернул ошибку при зачислении',
+  manual: 'Операция передана на ручную обработку',
+}
 
 export const ownerQuickLinks: OwnerQuickLink[] = [
   {
     id: 'quick-payments',
     label: 'Платежи',
     path: '/owner/payments',
-    counter: '128 операций сегодня',
+    counter: '8 операций в demo-журнале',
   },
   {
     id: 'quick-clubs',
-    label: 'Клубы и интеграции',
+    label: 'Клубы и цены фишек',
     path: '/owner/clubs',
     counter: '3 API подключено',
   },
@@ -609,11 +878,11 @@ export const ownerQuickLinks: OwnerQuickLink[] = [
     id: 'quick-processings',
     label: 'Процессинги и валюты',
     path: '/owner/processings',
-    counter: '3 активных маршрута MVP',
+    counter: '3 маршрута MVP',
   },
   {
     id: 'quick-partners',
-    label: 'Партнёры и тарифы',
+    label: 'Партнёры и комиссии',
     path: '/owner/partners',
     counter: '3 партнёра в работе',
   },
@@ -622,7 +891,7 @@ export const ownerQuickLinks: OwnerQuickLink[] = [
 export const partnerReports: PartnerReportRow[] = [
   {
     id: 'report-1',
-    period: '25.03.2026',
+    period: '27.03.2026',
     operations: 48,
     grossAmount: '1 284 500 RUB',
     successRate: '94.8%',
@@ -630,7 +899,7 @@ export const partnerReports: PartnerReportRow[] = [
   },
   {
     id: 'report-2',
-    period: '24.03.2026',
+    period: '26.03.2026',
     operations: 53,
     grossAmount: '1 412 900 RUB',
     successRate: '95.6%',
@@ -638,7 +907,7 @@ export const partnerReports: PartnerReportRow[] = [
   },
   {
     id: 'report-3',
-    period: '23.03.2026',
+    period: '25.03.2026',
     operations: 39,
     grossAmount: '998 200 RUB',
     successRate: '92.3%',
@@ -651,19 +920,19 @@ export const chatThreads: Record<string, ChatMessage[]> = {
     {
       id: 'msg-1',
       author: 'system',
-      text: 'Операция AC-240325-1042 • ответы администратора через Telegram',
+      text: 'Операция AC-240325-1042 привязана к Telegram-каналу администратора',
       time: '18:42',
     },
     {
       id: 'msg-2',
       author: 'player',
-      text: 'Оплата завершена, подскажите, когда баланс обновится?',
+      text: 'Оплата завершена, подскажите, когда баланс обновится',
       time: '18:45',
     },
     {
       id: 'msg-3',
       author: 'admin',
-      text: 'Баланс уже отправлен в приложение, подтверждение обычно приходит в течение минуты',
+      text: 'Баланс уже отправлен в клуб, подтверждение обычно приходит в течение минуты',
       time: '18:46',
     },
   ],
@@ -671,13 +940,13 @@ export const chatThreads: Record<string, ChatMessage[]> = {
     {
       id: 'msg-4',
       author: 'system',
-      text: 'Администратор видит сообщение в Telegram',
+      text: 'Администратор видит этот диалог в Telegram',
       time: '18:04',
     },
     {
       id: 'msg-5',
       author: 'player',
-      text: 'Деньги списались, но баланс в приложении не изменился',
+      text: 'Деньги списались, но фишки не поступили',
       time: '18:05',
       attachments: [
         {
@@ -691,7 +960,7 @@ export const chatThreads: Record<string, ChatMessage[]> = {
     {
       id: 'msg-6',
       author: 'admin',
-      text: 'Проверяем ответ API приложения, при необходимости переведём кейс в ручную обработку',
+      text: 'Проверяем ответ API клуба, при необходимости повторим зачисление',
       time: '18:06',
     },
   ],
@@ -727,14 +996,113 @@ export const getProcessingById = (processingId: string) =>
 export const getPartnerById = (partnerId: string) =>
   partners.find((partner) => partner.id === partnerId) ?? partners[0]
 
-export const getRateById = (rateId: string) =>
-  tariffRates.find((rate) => rate.id === rateId) ?? tariffRates[0]
+export const getCommissionById = (commissionId: string) =>
+  partnerProcessingCommissions.find((commission) => commission.id === commissionId) ??
+  partnerProcessingCommissions[0]
 
 export const getBindingByCurrency = (currency: Currency) =>
   currencyBindings.find((binding) => binding.currency === currency) ?? currencyBindings[0]
+
+export const getChipPriceRule = (clubId: string, currency: Currency) =>
+  chipPriceRules.find((rule) => rule.clubId === clubId && rule.currency === currency)
+
+export const getPlayerPartner = () => partners[0]
+
+export const calculateChipAmount = (
+  amount: number,
+  clubId: string,
+  currency: Currency,
+) => {
+  const rule = getChipPriceRule(clubId, currency)
+
+  if (!rule || amount <= 0) {
+    return 0
+  }
+
+  return amount / rule.pricePerChip
+}
+
+export const getCurrencyAvailability = (
+  clubId: string,
+  partnerId = getPlayerPartner().id,
+): CurrencyAvailability[] => {
+  const club = getClubById(clubId)
+  const partner = getPartnerById(partnerId)
+
+  return currencyBindings.map((binding) => {
+    const processing = getProcessingById(binding.processingId)
+    const chipRule = getChipPriceRule(clubId, binding.currency)
+
+    if (club.apiStatus === 'Вне MVP') {
+      return {
+        currency: binding.currency,
+        binding,
+        enabled: false,
+        reason: 'Клуб вне MVP',
+      }
+    }
+
+    if (!partner.allowedClubIds.includes(clubId)) {
+      return {
+        currency: binding.currency,
+        binding,
+        enabled: false,
+        reason: 'Клуб не подключен партнёру',
+      }
+    }
+
+    if (!binding.ownerEnabled) {
+      return {
+        currency: binding.currency,
+        binding,
+        enabled: false,
+        reason: 'Валюта отключена владельцем',
+      }
+    }
+
+    if (!partner.allowedCurrencies.includes(binding.currency)) {
+      return {
+        currency: binding.currency,
+        binding,
+        enabled: false,
+        reason: 'Валюта недоступна партнёру',
+      }
+    }
+
+    if (!partner.allowedProcessingIds.includes(processing.id)) {
+      return {
+        currency: binding.currency,
+        binding,
+        enabled: false,
+        reason: 'Процессинг отключен для партнёра',
+      }
+    }
+
+    if (!chipRule) {
+      return {
+        currency: binding.currency,
+        binding,
+        enabled: false,
+        reason: 'Нет цены фишки',
+      }
+    }
+
+    return {
+      currency: binding.currency,
+      binding,
+      enabled: true,
+    }
+  })
+}
 
 export const formatAmount = (amount: number, currency: Currency) =>
   new Intl.NumberFormat('ru-RU', {
     maximumFractionDigits: currency === 'USDT' ? 2 : 0,
     minimumFractionDigits: currency === 'USDT' ? 2 : 0,
+  }).format(amount)
+
+export const formatChipAmount = (amount: number) =>
+  new Intl.NumberFormat('ru-RU', {
+    maximumFractionDigits: amount % 1 === 0 ? 0 : 2,
+    minimumFractionDigits: 0,
   }).format(amount)

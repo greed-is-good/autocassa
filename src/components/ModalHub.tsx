@@ -15,9 +15,9 @@ import { usePrototype } from '../app/PrototypeContext'
 import {
   getBindingByCurrency,
   getClubById,
+  getCommissionById,
   getPartnerById,
   getProcessingById,
-  getRateById,
   processings,
 } from '../data/mockData'
 
@@ -33,7 +33,10 @@ export const ModalHub = () => {
       ? allOperations.find((item) => item.id === modalState.operationId)
       : null
 
-  const rate = modalState.type === 'editRate' ? getRateById(modalState.rateId) : null
+  const commission =
+    modalState.type === 'editCommission'
+      ? getCommissionById(modalState.commissionId)
+      : null
   const binding =
     modalState.type === 'editBinding'
       ? getBindingByCurrency(modalState.currency)
@@ -47,24 +50,15 @@ export const ModalHub = () => {
           <DialogContent dividers>
             <Stack spacing={2}>
               <Alert severity="info">
-                В demo-прототипе показываем форму создания партнёра и его основные
-                параметры: доступные клубы, валюты, процессинги и тарифный контур.
+                Карточка партнёра содержит доступные клубы, валюты, процессинги и комиссионный контур
               </Alert>
               <TextField defaultValue="Nova Reach" fullWidth label="Название партнёра" />
               <TextField defaultValue="Алексей Миронов" fullWidth label="Менеджер" />
               <TextField defaultValue="@nova_aff" fullWidth label="Telegram" />
-              <TextField defaultValue="До 600 операций / месяц" fullWidth label="План объёма" />
-              <TextField
-                defaultValue="PP Poker, X-poker"
-                fullWidth
-                label="Доступные клубы"
-              />
+              <TextField defaultValue="До 600 операций в месяц" fullWidth label="План объёма" />
+              <TextField defaultValue="PP Poker, X-poker" fullWidth label="Доступные клубы" />
               <TextField defaultValue="RUB, USDT" fullWidth label="Доступные валюты" />
-              <TextField
-                defaultValue="RiverPay RUB Gateway, Tether Desk"
-                fullWidth
-                label="Доступные процессинги"
-              />
+              <TextField defaultValue="RiverPay RUB Gateway, Tether Desk" fullWidth label="Доступные процессинги" />
             </Stack>
           </DialogContent>
           <DialogActions>
@@ -76,31 +70,26 @@ export const ModalHub = () => {
         </>
       ) : null}
 
-      {modalState.type === 'editRate' && rate ? (
+      {modalState.type === 'editCommission' && commission ? (
         <>
-          <DialogTitle>Редактирование курса</DialogTitle>
+          <DialogTitle>Комиссия процессинга</DialogTitle>
           <DialogContent dividers>
             <Stack spacing={2}>
               <Typography color="text.secondary" variant="body2">
-                {getPartnerById(rate.partnerId).title} • {rate.currency} •{' '}
-                {getProcessingById(rate.processingId).title}
+                {getPartnerById(commission.partnerId).title} • {commission.currency} •{' '}
+                {getProcessingById(commission.processingId).title}
               </Typography>
-              <TextField defaultValue={rate.fixedRate} fullWidth label="Фиксированный курс" />
-              <TextField
-                defaultValue={rate.settlementWindow}
-                fullWidth
-                label="Окно расчёта"
-              />
+              <TextField defaultValue={commission.commissionRate} fullWidth label="Комиссия партнёра" />
+              <TextField defaultValue={commission.settlementWindow} fullWidth label="Окно расчёта" />
               <Alert severity="warning">
-                Изменение курса фиксируется в журнале тарифов и влияет только на выбранную
-                связку валюта + процессинг.
+                Изменение фиксируется в логе комиссий и влияет только на выбранную связку
               </Alert>
             </Stack>
           </DialogContent>
           <DialogActions>
             <Button onClick={closeModal}>Отмена</Button>
             <Button onClick={closeModal} variant="contained">
-              Сохранить курс
+              Сохранить комиссию
             </Button>
           </DialogActions>
         </>
@@ -112,28 +101,17 @@ export const ModalHub = () => {
           <DialogContent dividers>
             <Stack spacing={2}>
               <Typography fontWeight={800}>{operation.id}</Typography>
-              <Typography>
-                {operation.issueNote ?? 'Клуб вернул некорректный ответ при зачислении.'}
-              </Typography>
+              <Typography>{operation.issueNote ?? 'Клуб вернул некорректный ответ при зачислении'}</Typography>
               <Alert severity="error">
-                Платёж уже получен. Для завершения операции требуется повторная отправка в
-                API клуба или ручная корректировка.
+                Платёж уже получен, для завершения операции нужна повторная отправка или ручная корректировка
               </Alert>
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button
-              color="warning"
-              onClick={() =>
-                openModal({ type: 'manualAdjustment', operationId: operation.id })
-              }
-            >
+            <Button color="warning" onClick={() => openModal({ type: 'manualAdjustment', operationId: operation.id })}>
               В ручную обработку
             </Button>
-            <Button
-              onClick={() => openModal({ type: 'retryAccrual', operationId: operation.id })}
-              variant="contained"
-            >
+            <Button onClick={() => openModal({ type: 'retryAccrual', operationId: operation.id })} variant="contained">
               Повторить зачисление
             </Button>
           </DialogActions>
@@ -147,11 +125,10 @@ export const ModalHub = () => {
             <Stack spacing={2}>
               <Typography fontWeight={800}>{operation.id}</Typography>
               <Typography>
-                Операция будет отмечена как требующая ручной обработки. Кейс перейдёт в
-                очередь оператора с сохранением истории статусов и чата.
+                Операция будет отмечена как требующая ручной обработки и перейдёт в очередь оператора
               </Typography>
               <TextField
-                defaultValue="Проверить баланс в клубе и при необходимости сделать ручную корректировку."
+                defaultValue="Проверить баланс в клубе и при необходимости сделать ручную корректировку"
                 fullWidth
                 label="Комментарий оператора"
                 multiline
@@ -179,8 +156,7 @@ export const ModalHub = () => {
                 {operation.apiRequestId ?? 'ещё не создан'}
               </Typography>
               <Alert severity="info">
-                Система повторно отправит запрос в API клуба и зафиксирует новое событие в
-                истории статусов.
+                Система повторно отправит запрос в API клуба и создаст новое событие в истории операции
               </Alert>
             </Stack>
           </DialogContent>
@@ -199,13 +175,9 @@ export const ModalHub = () => {
           <DialogContent dividers>
             <Stack spacing={2}>
               <Typography fontWeight={800}>{operation.id}</Typography>
-              <Typography>
-                Ссылка на оплату более недействительна. В интерфейсе игрока мы показываем
-                понятное состояние с предложением создать новую ссылку.
-              </Typography>
+              <Typography>Ссылка на оплату более недействительна</Typography>
               <Alert severity="warning">
-                Зачисление в клуб не запускалось, так как подтверждение оплаты не было
-                получено.
+                Зачисление в клуб не запускалось, потому что подтверждение оплаты не было получено
               </Alert>
             </Stack>
           </DialogContent>
@@ -225,18 +197,17 @@ export const ModalHub = () => {
             <Stack spacing={2}>
               <Typography fontWeight={800}>{operation.id}</Typography>
               <Typography>
-                Клуб подтвердил изменение баланса. Игрок видит финальный успешный статус и
-                может при необходимости открыть чек оплаты.
+                Клуб подтвердил изменение баланса, операция завершена без ручного вмешательства
               </Typography>
               <Alert severity="success">
-                Зачисление завершено, операция закрыта без ручного вмешательства.
+                Игрок получил {operation.chipAmount.toLocaleString('ru-RU')} фишек
               </Alert>
             </Stack>
           </DialogContent>
           <DialogActions>
             <Button onClick={closeModal}>Закрыть</Button>
             <Button onClick={closeModal} variant="contained">
-              Открыть чек
+              Открыть журнал
             </Button>
           </DialogActions>
         </>
@@ -248,12 +219,7 @@ export const ModalHub = () => {
           <DialogContent dividers>
             <Stack spacing={2}>
               <Typography fontWeight={800}>Валюта {binding.currency}</Typography>
-              <TextField
-                defaultValue={binding.processingId}
-                fullWidth
-                label="Процессинг"
-                select
-              >
+              <TextField defaultValue={binding.processingId} fullWidth label="Процессинг" select>
                 {processings
                   .filter(
                     (processing) =>
@@ -267,8 +233,7 @@ export const ModalHub = () => {
                   ))}
               </TextField>
               <Alert severity="info">
-                В MVP игрок всё равно не выбирает процессинг вручную. Изменение делается
-                только владельцем в настройках.
+                Владелец настраивает, какой процессинг подставляется по валюте и нужен ли PDF-чек
               </Alert>
             </Stack>
           </DialogContent>
