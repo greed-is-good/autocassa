@@ -206,60 +206,184 @@ export const currencyBindings: CurrencyBinding[] = [
 
 export const chipPriceRules: ChipPriceRule[] = [
   {
-    id: 'chip-royal-rub',
+    id: 'chip-royal-riverpay-rub',
     clubId: 'club-royal',
     currency: 'RUB',
+    processingId: 'proc-riverpay',
     pricePerChip: 0.1,
     updatedAt: '27.03.2026, 17:10',
     updatedBy: 'Екатерина Петрова',
   },
   {
-    id: 'chip-royal-kzt',
+    id: 'chip-royal-kaspiflow-kzt',
     clubId: 'club-royal',
     currency: 'KZT',
+    processingId: 'proc-kaspiflow',
     pricePerChip: 0.55,
     updatedAt: '27.03.2026, 17:10',
     updatedBy: 'Екатерина Петрова',
   },
   {
-    id: 'chip-royal-usdt',
+    id: 'chip-royal-tetherdesk-usdt',
     clubId: 'club-royal',
     currency: 'USDT',
+    processingId: 'proc-tetherdesk',
     pricePerChip: 0.001,
     updatedAt: '27.03.2026, 17:10',
     updatedBy: 'Екатерина Петрова',
   },
   {
-    id: 'chip-volna-rub',
+    id: 'chip-volna-riverpay-rub',
     clubId: 'club-volna',
     currency: 'RUB',
+    processingId: 'proc-riverpay',
     pricePerChip: 0.12,
     updatedAt: '27.03.2026, 17:15',
     updatedBy: 'Екатерина Петрова',
   },
   {
-    id: 'chip-volna-kzt',
+    id: 'chip-volna-kaspiflow-kzt',
     clubId: 'club-volna',
     currency: 'KZT',
+    processingId: 'proc-kaspiflow',
     pricePerChip: 0.6,
     updatedAt: '27.03.2026, 17:15',
     updatedBy: 'Екатерина Петрова',
   },
   {
-    id: 'chip-summit-rub',
+    id: 'chip-volna-tetherdesk-usdt',
+    clubId: 'club-volna',
+    currency: 'USDT',
+    processingId: 'proc-tetherdesk',
+    pricePerChip: 0.0012,
+    updatedAt: '27.03.2026, 17:15',
+    updatedBy: 'Екатерина Петрова',
+  },
+  {
+    id: 'chip-summit-riverpay-rub',
     clubId: 'club-summit',
     currency: 'RUB',
+    processingId: 'proc-riverpay',
     pricePerChip: 0.11,
     updatedAt: '27.03.2026, 17:21',
     updatedBy: 'Денис Самойлов',
   },
   {
-    id: 'chip-summit-usdt',
+    id: 'chip-summit-kaspiflow-kzt',
+    clubId: 'club-summit',
+    currency: 'KZT',
+    processingId: 'proc-kaspiflow',
+    pricePerChip: 0.58,
+    updatedAt: '27.03.2026, 17:21',
+    updatedBy: 'Денис Самойлов',
+  },
+  {
+    id: 'chip-summit-tetherdesk-usdt',
     clubId: 'club-summit',
     currency: 'USDT',
+    processingId: 'proc-tetherdesk',
     pricePerChip: 0.0011,
     updatedAt: '27.03.2026, 17:21',
     updatedBy: 'Денис Самойлов',
+  },
+  {
+    id: 'chip-royal-backup-rub',
+    clubId: 'club-royal',
+    currency: 'RUB',
+    processingId: 'proc-backup',
+    pricePerChip: 0.11,
+    updatedAt: '27.03.2026, 17:18',
+    updatedBy: 'Екатерина Петрова',
+  },
+  {
+    id: 'chip-royal-backup-kzt',
+    clubId: 'club-royal',
+    currency: 'KZT',
+    processingId: 'proc-backup',
+    pricePerChip: 0.6,
+    updatedAt: '27.03.2026, 17:18',
+    updatedBy: 'Екатерина Петрова',
+  },
+  {
+    id: 'chip-volna-backup-rub',
+    clubId: 'club-volna',
+    currency: 'RUB',
+    processingId: 'proc-backup',
+    pricePerChip: 0.13,
+    updatedAt: '27.03.2026, 17:18',
+    updatedBy: 'Екатерина Петрова',
+  },
+  {
+    id: 'chip-volna-backup-kzt',
+    clubId: 'club-volna',
+    currency: 'KZT',
+    processingId: 'proc-backup',
+    pricePerChip: 0.64,
+    updatedAt: '27.03.2026, 17:18',
+    updatedBy: 'Екатерина Петрова',
+  },
+  {
+    id: 'chip-summit-backup-rub',
+    clubId: 'club-summit',
+    currency: 'RUB',
+    processingId: 'proc-backup',
+    pricePerChip: 0.115,
+    updatedAt: '27.03.2026, 17:22',
+    updatedBy: 'Денис Самойлов',
+  },
+  {
+    id: 'chip-summit-backup-kzt',
+    clubId: 'club-summit',
+    currency: 'KZT',
+    processingId: 'proc-backup',
+    pricePerChip: 0.61,
+    updatedAt: '27.03.2026, 17:22',
+    updatedBy: 'Денис Самойлов',
+  },
+  {
+    id: 'chip-lucky-riverpay-rub',
+    clubId: 'club-lucky',
+    currency: 'RUB',
+    processingId: 'proc-riverpay',
+    pricePerChip: 0.14,
+    updatedAt: '27.03.2026, 17:29',
+    updatedBy: 'Екатерина Петрова',
+  },
+  {
+    id: 'chip-lucky-kaspiflow-kzt',
+    clubId: 'club-lucky',
+    currency: 'KZT',
+    processingId: 'proc-kaspiflow',
+    pricePerChip: 0.65,
+    updatedAt: '27.03.2026, 17:29',
+    updatedBy: 'Екатерина Петрова',
+  },
+  {
+    id: 'chip-lucky-tetherdesk-usdt',
+    clubId: 'club-lucky',
+    currency: 'USDT',
+    processingId: 'proc-tetherdesk',
+    pricePerChip: 0.0014,
+    updatedAt: '27.03.2026, 17:29',
+    updatedBy: 'Екатерина Петрова',
+  },
+  {
+    id: 'chip-lucky-backup-rub',
+    clubId: 'club-lucky',
+    currency: 'RUB',
+    processingId: 'proc-backup',
+    pricePerChip: 0.15,
+    updatedAt: '27.03.2026, 17:29',
+    updatedBy: 'Екатерина Петрова',
+  },
+  {
+    id: 'chip-lucky-backup-kzt',
+    clubId: 'club-lucky',
+    currency: 'KZT',
+    processingId: 'proc-backup',
+    pricePerChip: 0.68,
+    updatedAt: '27.03.2026, 17:29',
+    updatedBy: 'Екатерина Петрова',
   },
 ]
 
@@ -1003,8 +1127,17 @@ export const getCommissionById = (commissionId: string) =>
 export const getBindingByCurrency = (currency: Currency) =>
   currencyBindings.find((binding) => binding.currency === currency) ?? currencyBindings[0]
 
-export const getChipPriceRule = (clubId: string, currency: Currency) =>
-  chipPriceRules.find((rule) => rule.clubId === clubId && rule.currency === currency)
+export const getChipPriceRule = (
+  clubId: string,
+  currency: Currency,
+  processingId: string,
+) =>
+  chipPriceRules.find(
+    (rule) =>
+      rule.clubId === clubId &&
+      rule.currency === currency &&
+      rule.processingId === processingId,
+  )
 
 export const getPlayerPartner = () => partners[0]
 
@@ -1012,8 +1145,11 @@ export const calculateChipAmount = (
   amount: number,
   clubId: string,
   currency: Currency,
+  processingId?: string,
 ) => {
-  const rule = getChipPriceRule(clubId, currency)
+  const resolvedProcessingId =
+    processingId ?? getBindingByCurrency(currency).processingId
+  const rule = getChipPriceRule(clubId, currency, resolvedProcessingId)
 
   if (!rule || amount <= 0) {
     return 0
@@ -1031,7 +1167,7 @@ export const getCurrencyAvailability = (
 
   return currencyBindings.map((binding) => {
     const processing = getProcessingById(binding.processingId)
-    const chipRule = getChipPriceRule(clubId, binding.currency)
+    const chipRule = getChipPriceRule(clubId, binding.currency, binding.processingId)
 
     if (club.apiStatus === 'Вне MVP') {
       return {

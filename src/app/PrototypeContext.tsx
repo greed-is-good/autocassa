@@ -122,7 +122,12 @@ const buildCurrentPlayerOperation = (
   const club = getClubById(draft.clubId)
   const scenarioMeta = playerScenarioMeta[scenario]
   const amount = Number(draft.amount) || 0
-  const chipAmount = calculateChipAmount(amount, draft.clubId, draft.currency)
+  const chipAmount = calculateChipAmount(
+    amount,
+    draft.clubId,
+    draft.currency,
+    processing.id,
+  )
   const receiptRequired = processing.requiresReceiptUpload
   const receiptStatus = receiptRequired ? scenarioMeta.receiptStatus : 'not_required'
   const apiRequestId =

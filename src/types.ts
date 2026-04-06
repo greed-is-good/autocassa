@@ -101,6 +101,7 @@ export interface ChipPriceRule {
   id: string
   clubId: string
   currency: Currency
+  processingId: string
   pricePerChip: number
   updatedAt: string
   updatedBy: string

@@ -94,6 +94,7 @@ export const PlayerTopUpPage = () => {
     Number(playerDraft.amount) || 0,
     playerDraft.clubId,
     playerDraft.currency,
+    selectedProcessing.id,
   )
 
   const appCards = useMemo(
