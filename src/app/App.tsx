@@ -101,7 +101,7 @@ const navigationByRole = {
       {
         label: 'Клубы',
         path: '/owner/clubs',
-        description: 'Клубы, интеграции и цена фишки',
+        description: 'Выбор клуба и настройка цены фишки',
         icon: ApartmentRounded,
       },
       {

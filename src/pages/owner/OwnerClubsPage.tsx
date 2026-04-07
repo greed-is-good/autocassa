@@ -1,291 +1,406 @@
-import { CheckCircleRounded, LinkRounded } from '@mui/icons-material'
+import { useMemo, useState } from 'react'
+
 import {
+  Alert,
+  Box,
+  Button,
   Chip,
+  FormControl,
   Grid,
+  InputAdornment,
+  InputLabel,
+  MenuItem,
+  Select,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   TextField,
   Typography,
 } from '@mui/material'
-import { useMemo, useState } from 'react'
 
 import { SectionCard } from '../../components/SectionCard'
-import { chipPriceRules, clubs, processings } from '../../data/mockData'
+import {
+  chipPriceRules,
+  clubs,
+  formatChipAmount,
+  getBindingByCurrency,
+} from '../../data/mockData'
+import type { Currency } from '../../types'
 
-const checkColor = {
-  Успешно: 'success',
-  'С предупреждением': 'warning',
-  Ошибка: 'error',
-} as const
+const currencies: Currency[] = ['RUB', 'KZT', 'USDT']
 
-const currencies = ['RUB', 'KZT', 'USDT'] as const
+const pricePlaceholders: Record<Currency, string> = {
+  RUB: '0.10',
+  KZT: '0.55',
+  USDT: '0.0010',
+}
+
+const getRuleKey = (clubId: string, currency: Currency) => `${clubId}:${currency}`
+
+const buildInitialDraftPrices = () =>
+  clubs.reduce<Record<string, string>>((accumulator, club) => {
+    currencies.forEach((currency) => {
+      const binding = getBindingByCurrency(currency)
+      const rule = chipPriceRules.find(
+        (item) =>
+          item.clubId === club.id &&
+          item.currency === currency &&
+          item.processingId === binding.processingId,
+      )
+
+      accumulator[getRuleKey(club.id, currency)] = rule ? String(rule.pricePerChip) : ''
+    })
+
+    return accumulator
+  }, {})
+
+const parseChipPrice = (value: string) => {
+  const normalized = value.replace(',', '.').trim()
+
+  if (!normalized) {
+    return null
+  }
+
+  const parsed = Number(normalized)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null
+}
+
+const formatChipPrice = (value: number, currency: Currency) =>
+  new Intl.NumberFormat('ru-RU', {
+    maximumFractionDigits: currency === 'USDT' ? 4 : 2,
+    minimumFractionDigits: currency === 'USDT' ? 4 : 2,
+  }).format(value)
 
 export const OwnerClubsPage = () => {
+  const fallbackClub = clubs[0]
+  const [selectedClubId, setSelectedClubId] = useState(fallbackClub?.id ?? '')
   const [priceRules, setPriceRules] = useState(chipPriceRules)
-  const [draftPrices, setDraftPrices] = useState<Record<string, string>>({})
+  const [draftPrices, setDraftPrices] = useState<Record<string, string>>(
+    () => buildInitialDraftPrices(),
+  )
+  const [savedAtByClubId, setSavedAtByClubId] = useState<Record<string, string>>({})
+  const [saveNotice, setSaveNotice] = useState<string | null>(null)
 
-  const rulesByKey = useMemo(() => {
+  const activeRulesByKey = useMemo(() => {
     const entries = priceRules.map((rule) => [
-      `${rule.clubId}-${rule.processingId}-${rule.currency}`,
+      `${rule.clubId}:${rule.currency}:${rule.processingId}`,
       rule,
     ] as const)
+
     return new Map(entries)
   }, [priceRules])
 
-  const getRule = (clubId: string, processingId: string, currency: (typeof currencies)[number]) =>
-    rulesByKey.get(`${clubId}-${processingId}-${currency}`)
+  if (!fallbackClub) {
+    return (
+      <Stack className="autocassa-fade-up" spacing={3}>
+        <SectionCard
+          eyebrow="Владелец"
+          title="Настройки клубов"
+          subtitle="Клубы пока не добавлены"
+        >
+          <Alert severity="warning">
+            Для настройки стоимости 1 фишки сначала нужно добавить хотя бы один клуб.
+          </Alert>
+        </SectionCard>
+      </Stack>
+    )
+  }
 
-  const commitRule = (
-    clubId: string,
-    processingId: string,
-    currency: (typeof currencies)[number],
-    rawValue: string,
-  ) => {
-    const normalized = rawValue.trim().replace(',', '.')
+  const selectedClub =
+    clubs.find((club) => club.id === selectedClubId) ?? fallbackClub
 
-    if (!normalized) {
-      setPriceRules((previous) =>
-        previous.filter(
-          (rule) =>
-            !(
-              rule.clubId === clubId &&
-              rule.processingId === processingId &&
-              rule.currency === currency
-            ),
-        ),
-      )
-      return
+  const selectedClubRules = currencies.map((currency) => {
+    const binding = getBindingByCurrency(currency)
+    const persistedRule =
+      activeRulesByKey.get(
+        `${selectedClub.id}:${currency}:${binding.processingId}`,
+      ) ?? null
+    const key = getRuleKey(selectedClub.id, currency)
+    const draftValue =
+      draftPrices[key] ?? (persistedRule ? String(persistedRule.pricePerChip) : '')
+    const parsedValue = parseChipPrice(draftValue)
+
+    return {
+      currency,
+      binding,
+      draftValue,
+      parsedValue,
+      persistedRule,
     }
+  })
 
-    const parsed = Number(normalized)
+  const configuredCount = selectedClubRules.filter(
+    (rule) => rule.parsedValue !== null,
+  ).length
 
-    if (!Number.isFinite(parsed) || parsed <= 0) {
-      return
-    }
+  const handlePriceChange = (currency: Currency, value: string) => {
+    setDraftPrices((current) => ({
+      ...current,
+      [getRuleKey(selectedClub.id, currency)]: value,
+    }))
+    setSaveNotice(null)
+  }
 
-    const now = new Date().toLocaleString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
+  const handleSave = () => {
+    const savedAt = new Date().toLocaleString('ru-RU')
     const updatedBy = 'Настройка владельца'
 
-    setPriceRules((previous) => {
-      const existingIndex = previous.findIndex(
-        (rule) =>
-          rule.clubId === clubId &&
-          rule.processingId === processingId &&
-          rule.currency === currency,
-      )
+    setPriceRules((current) => {
+      const next = [...current]
 
-      if (existingIndex === -1) {
-        return [
-          ...previous,
-          {
-            id: `chip-${clubId}-${processingId}-${currency}`.toLowerCase(),
-            clubId,
-            currency,
-            processingId,
-            pricePerChip: parsed,
-            updatedAt: now,
+      selectedClubRules.forEach((rule) => {
+        const existingIndex = next.findIndex(
+          (item) =>
+            item.clubId === selectedClub.id &&
+            item.currency === rule.currency &&
+            item.processingId === rule.binding.processingId,
+        )
+
+        if (rule.parsedValue === null) {
+          if (existingIndex !== -1) {
+            next.splice(existingIndex, 1)
+          }
+          return
+        }
+
+        if (existingIndex === -1) {
+          next.push({
+            id: `chip-${selectedClub.id}-${rule.binding.processingId}-${rule.currency}`.toLowerCase(),
+            clubId: selectedClub.id,
+            currency: rule.currency,
+            processingId: rule.binding.processingId,
+            pricePerChip: rule.parsedValue,
+            updatedAt: savedAt,
             updatedBy,
-          },
-        ]
-      }
+          })
+          return
+        }
 
-      return previous.map((rule) =>
-        rule.clubId === clubId &&
-        rule.processingId === processingId &&
-        rule.currency === currency
-          ? { ...rule, pricePerChip: parsed, updatedAt: now, updatedBy }
-          : rule,
-      )
+        next[existingIndex] = {
+          ...next[existingIndex],
+          pricePerChip: rule.parsedValue,
+          updatedAt: savedAt,
+          updatedBy,
+        }
+      })
+
+      return next
     })
+
+    setSavedAtByClubId((current) => ({
+      ...current,
+      [selectedClub.id]: savedAt,
+    }))
+    setSaveNotice(`Настройки клуба «${selectedClub.title}» обновлены в демо.`)
   }
 
   return (
     <Stack className="autocassa-fade-up" spacing={3}>
-    <SectionCard
-      eyebrow="Владелец"
-      title="Клубы и интеграции"
-      subtitle="Статусы API и базовые параметры клубов"
-    >
-      <Grid container spacing={2}>
-        {clubs.map((club) => (
-          <Grid key={club.id} size={{ xs: 12, md: 6 }}>
-            <Stack
-              spacing={1.2}
-              sx={{
-                backgroundColor: 'rgba(255,255,255,0.72)',
-                border: '1px solid rgba(15,23,42,0.06)',
-                borderRadius: '22px',
-                p: 2.2,
-              }}
-            >
-              <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={1.5}>
-                <Stack spacing={0.4}>
-                  <Typography fontWeight={800}>{club.title}</Typography>
-                  <Typography color="text.secondary" variant="body2">
-                    ID клуба: {club.clubNumber}
-                  </Typography>
-                </Stack>
-                <Chip color={club.apiStatus === 'API подключено' ? 'success' : 'default'} label={club.apiStatus} />
-              </Stack>
-              <Typography color="text.secondary" variant="body2">
-                Endpoint: {club.endpoint}
-              </Typography>
-              <Chip
-                color={checkColor[club.lastCheckStatus]}
-                icon={<CheckCircleRounded />}
-                label={`Проверка: ${club.lastCheckStatus}`}
-                sx={{ width: 'fit-content' }}
-              />
-              <Typography variant="body2">{club.lastCheckNote}</Typography>
-            </Stack>
-          </Grid>
-        ))}
-      </Grid>
-    </SectionCard>
+      <SectionCard
+        eyebrow="Владелец"
+        title="Настройки клубов"
+        subtitle="Выберите клуб и настройте стоимость 1 фишки для нужных валют"
+      >
+        <Stack spacing={3}>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, md: 5 }}>
+              <FormControl fullWidth>
+                <InputLabel>Клуб</InputLabel>
+                <Select
+                  label="Клуб"
+                  value={selectedClub.id}
+                  onChange={(event) => {
+                    setSelectedClubId(event.target.value)
+                    setSaveNotice(null)
+                  }}
+                >
+                  {clubs.map((club) => (
+                    <MenuItem key={club.id} value={club.id}>
+                      {club.title} • {club.clubNumber}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
 
-    <SectionCard title="Реестр интеграций" subtitle="Табличный реестр подключений">
-      <TableContainer>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Приложение</TableCell>
-              <TableCell>ID клуба</TableCell>
-              <TableCell>Статус API</TableCell>
-              <TableCell>Базовый endpoint</TableCell>
-              <TableCell>Последняя проверка</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {clubs.map((club) => (
-              <TableRow key={club.id}>
-                <TableCell>
-                  <Typography fontWeight={800}>{club.title}</Typography>
-                </TableCell>
-                <TableCell>{club.clubNumber}</TableCell>
-                <TableCell>
-                  <Chip color={club.apiStatus === 'API подключено' ? 'success' : 'default'} label={club.apiStatus} size="small" />
-                </TableCell>
-                <TableCell>
-                  <Stack direction="row" spacing={1}>
-                    <LinkRounded fontSize="small" />
-                    <Typography variant="body2">{club.endpoint}</Typography>
+            <Grid size={{ xs: 12, md: 7 }}>
+              <Stack
+                spacing={1}
+                sx={{
+                  backgroundColor: 'rgba(31,115,242,0.06)',
+                  border: '1px solid rgba(31,115,242,0.12)',
+                  borderRadius: '22px',
+                  p: 2.2,
+                }}
+              >
+                <Stack
+                  alignItems={{ xs: 'flex-start', sm: 'center' }}
+                  direction={{ xs: 'column', sm: 'row' }}
+                  justifyContent="space-between"
+                  spacing={1.5}
+                >
+                  <Stack spacing={0.3}>
+                    <Typography fontWeight={800} variant="h3">
+                      {selectedClub.title}
+                    </Typography>
+                    <Typography color="text.secondary" variant="body2">
+                      ID клуба: {selectedClub.clubNumber}
+                    </Typography>
                   </Stack>
-                </TableCell>
-                <TableCell>
-                  {club.lastCheckStatus} • {club.lastCheckAt}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </SectionCard>
+                  <Chip
+                    color={configuredCount > 0 ? 'success' : 'default'}
+                    label={`${configuredCount} из ${currencies.length} валют настроено`}
+                  />
+                </Stack>
 
-    <SectionCard title="Стоимость 1 фишки" subtitle="Матрица клуб + процессинг + валюта">
-      <TableContainer>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Приложение</TableCell>
-              <TableCell>ID клуба</TableCell>
-              <TableCell>Процессинг</TableCell>
-              {currencies.map((currency) => (
-                <TableCell key={currency} align="right">
-                  {currency}
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {clubs.map((club) => {
-              const clubProcessings = processings.filter((processing) =>
-                currencies.some((currency) => getRule(club.id, processing.id, currency)),
-              )
+                <Typography color="text.secondary" variant="body2">
+                  На экране остаются только настройки цены фишки: выбираете клуб и
+                  задаёте стоимость 1 фишки по валютам, которые используются в
+                  пополнениях.
+                </Typography>
+              </Stack>
+            </Grid>
+          </Grid>
 
-              return clubProcessings.map((processing, index) => (
-                <TableRow key={`${club.id}-${processing.id}`}>
-                  {index === 0 ? (
-                    <>
-                      <TableCell rowSpan={clubProcessings.length}>
-                        <Typography fontWeight={800}>{club.title}</Typography>
-                      </TableCell>
-                      <TableCell rowSpan={clubProcessings.length}>{club.clubNumber}</TableCell>
-                    </>
-                  ) : null}
-                  <TableCell>
-                    <Stack spacing={0.2}>
-                      <Typography fontWeight={700}>{processing.title}</Typography>
+          {saveNotice ? (
+            <Alert severity="success">{saveNotice}</Alert>
+          ) : (
+            <Alert severity="info">
+              Цена фишки участвует в расчёте по формуле: сумма пополнения /
+              стоимость 1 фишки = количество фишек игроку.
+            </Alert>
+          )}
+
+          <Grid container spacing={2}>
+            {selectedClubRules.map((rule) => (
+              <Grid key={`${selectedClub.id}-${rule.currency}`} size={{ xs: 12, md: 6, xl: 4 }}>
+                <Stack
+                  spacing={1.5}
+                  sx={{
+                    backgroundColor: 'rgba(255,255,255,0.74)',
+                    border: '1px solid rgba(15,23,42,0.06)',
+                    borderRadius: '22px',
+                    p: 2.2,
+                    height: '100%',
+                  }}
+                >
+                  <Stack
+                    alignItems="center"
+                    direction="row"
+                    justifyContent="space-between"
+                    spacing={1.5}
+                  >
+                    <Stack spacing={0.3}>
+                      <Typography fontWeight={800}>{rule.currency}</Typography>
                       <Typography color="text.secondary" variant="body2">
-                        {processing.code} • {processing.status}
+                        Стоимость 1 фишки в валюте пополнения
                       </Typography>
                     </Stack>
-                  </TableCell>
-                  {currencies.map((currency) => {
-                    const isSupported = processing.currencies.includes(currency)
-                    const rule = isSupported ? getRule(club.id, processing.id, currency) : undefined
-                    const cellKey = `${club.id}-${processing.id}-${currency}`
-                    const draftValue = draftPrices[cellKey]
-                    const value = draftValue ?? (rule ? String(rule.pricePerChip) : '')
-                    return (
-                      <TableCell key={`${club.id}-${processing.id}-${currency}`} align="right">
-                        {isSupported ? (
-                          <TextField
-                            inputProps={{
-                              min: 0,
-                              step: currency === 'USDT' ? 0.0001 : 0.01,
-                            }}
-                            onBlur={() => {
-                              commitRule(club.id, processing.id, currency, value)
-                              setDraftPrices((previous) => {
-                                const next = { ...previous }
-                                delete next[cellKey]
-                                return next
-                              })
-                            }}
-                            onChange={(event) =>
-                              setDraftPrices((previous) => ({
-                                ...previous,
-                                [cellKey]: event.target.value,
-                              }))
-                            }
-                            placeholder="—"
-                            size="small"
-                            sx={{ maxWidth: 120 }}
-                            type="number"
-                            value={value}
-                            variant="standard"
-                          />
-                        ) : (
-                          '—'
-                        )}
-                      </TableCell>
-                    )
-                  })}
-                </TableRow>
-              ))
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                    <Chip
+                      color={rule.parsedValue !== null ? 'success' : 'default'}
+                      label={rule.parsedValue !== null ? 'Настроено' : 'Не задано'}
+                      size="small"
+                    />
+                  </Stack>
 
-      <Stack mt={2} spacing={0.5}>
-        <Typography fontWeight={800}>Всего правил: {priceRules.length}</Typography>
-        <Typography color="text.secondary" variant="body2">
-          Источник расчёта фишек для player flow
-        </Typography>
-      </Stack>
-    </SectionCard>
-  </Stack>
+                  <TextField
+                    fullWidth
+                    label="Стоимость 1 фишки"
+                    value={rule.draftValue}
+                    onChange={(event) =>
+                      handlePriceChange(rule.currency, event.target.value)
+                    }
+                    placeholder={pricePlaceholders[rule.currency]}
+                    helperText={
+                      rule.parsedValue !== null
+                        ? `1 000 ${rule.currency} = ${formatChipAmount(
+                            1000 / rule.parsedValue,
+                          )} фишек`
+                        : 'Введите положительное значение, чтобы включить расчёт'
+                    }
+                    inputProps={{
+                      inputMode: 'decimal',
+                    }}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          {rule.currency}
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+
+                  <Box
+                    sx={{
+                      backgroundColor: 'rgba(15,23,42,0.03)',
+                      borderRadius: '18px',
+                      p: 1.5,
+                    }}
+                  >
+                    <Stack spacing={0.6}>
+                      <Stack
+                        alignItems={{ xs: 'flex-start', sm: 'center' }}
+                        direction={{ xs: 'column', sm: 'row' }}
+                        justifyContent="space-between"
+                        spacing={1}
+                      >
+                        <Typography color="text.secondary" variant="body2">
+                          Последняя сохранённая цена
+                        </Typography>
+                        <Typography fontWeight={800} variant="body2">
+                          {rule.persistedRule
+                            ? `${formatChipPrice(
+                                rule.persistedRule.pricePerChip,
+                                rule.currency,
+                              )} ${rule.currency}`
+                            : 'Ещё не задана'}
+                        </Typography>
+                      </Stack>
+
+                      <Typography color="text.secondary" variant="body2">
+                        {rule.persistedRule
+                          ? `${rule.persistedRule.updatedAt} • ${rule.persistedRule.updatedBy}`
+                          : 'После сохранения значение начнёт участвовать в расчёте фишек для этого клуба.'}
+                      </Typography>
+                    </Stack>
+                  </Box>
+                </Stack>
+              </Grid>
+            ))}
+          </Grid>
+
+          <Box
+            sx={{
+              backgroundColor: 'rgba(15,23,42,0.03)',
+              border: '1px solid rgba(15,23,42,0.06)',
+              borderRadius: '22px',
+              p: 2.2,
+            }}
+          >
+            <Stack
+              alignItems={{ xs: 'flex-start', md: 'center' }}
+              direction={{ xs: 'column', md: 'row' }}
+              justifyContent="space-between"
+              spacing={2}
+            >
+              <Stack spacing={0.4}>
+                <Typography fontWeight={800}>Сохранение настроек</Typography>
+                <Typography color="text.secondary" variant="body2">
+                  {savedAtByClubId[selectedClub.id]
+                    ? `Последнее демо-сохранение: ${savedAtByClubId[selectedClub.id]}`
+                    : 'Изменения пока находятся в черновике на этом экране.'}
+                </Typography>
+              </Stack>
+
+              <Button
+                onClick={handleSave}
+                variant="contained"
+                disabled={configuredCount === 0}
+              >
+                Сохранить цены
+              </Button>
+            </Stack>
+          </Box>
+        </Stack>
+      </SectionCard>
+    </Stack>
   )
 }

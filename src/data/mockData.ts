@@ -994,9 +994,9 @@ export const ownerQuickLinks: OwnerQuickLink[] = [
   },
   {
     id: 'quick-clubs',
-    label: 'Клубы и цены фишек',
+    label: 'Настройки клубов',
     path: '/owner/clubs',
-    counter: '3 API подключено',
+    counter: '7 правил цены фишки',
   },
   {
     id: 'quick-processings',
